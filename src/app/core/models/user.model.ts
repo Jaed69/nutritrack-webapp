@@ -1,7 +1,17 @@
 // ===== ENUMS =====
 export enum RoleType {
-  ROLE_USER = 'ROLE_USER',
-  ROLE_ADMIN = 'ROLE_ADMIN'
+  ROLE_USER = 1,
+  ROLE_ADMIN = 2
+}
+
+// Helper para verificar si un id_rol es admin
+export function isAdminRole(roleId: number): boolean {
+  return roleId === RoleType.ROLE_ADMIN;
+}
+
+// Helper para obtener el nombre del rol
+export function getRoleName(roleId: number): string {
+  return roleId === RoleType.ROLE_ADMIN ? 'Administrador' : 'Usuario';
 }
 
 // ===== REQUESTS =====
@@ -24,19 +34,29 @@ export interface RegisterRequest {
 }
 
 // ===== RESPONSES =====
+// Respuesta envuelta del backend
+export interface ApiLoginResponse {
+  success: boolean;
+  message: string;
+  data: AuthResponse;
+  timestamp: string;
+}
+
 export interface AuthResponse {
   token: string;
-  type: string;
   email: string;
-  name: string;
-  role?: RoleType;
+  nombre?: string;
+  apellido?: string;
+  role: string; // "ROLE_USER" o "ROLE_ADMIN"
+  userId?: number;
+  perfilId?: number;
 }
 
 export interface UserResponse {
   id: string;
   email: string;
   name: string;
-  role: RoleType;
+  id_rol: number; // 1 = Usuario, 2 = Admin
   active: boolean;
   createdAt: string;
   updatedAt: string;

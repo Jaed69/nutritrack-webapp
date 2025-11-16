@@ -77,5 +77,6 @@ import { FooterComponent } from '../components/footer.component';
 export class AuthLayoutComponent {
   private authService = inject(AuthService);
 
-  isAdmin = computed(() => this.authService.currentUser()?.role === 'ROLE_ADMIN');
+  // id_rol = 2 es Admin
+  isAdmin = computed(() => this.authService.currentUser()?.id_rol === 2);
 }

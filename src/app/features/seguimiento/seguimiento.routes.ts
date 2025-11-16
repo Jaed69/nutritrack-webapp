@@ -3,10 +3,13 @@ import { authGuard } from '../../core/guards/auth.guard';
 
 /**
  * MÓDULO 5: SEGUIMIENTO Y PROGRESO
- * Rutas para registrar actividades y ver progreso
+ * Rutas para registro de actividades y visualización de progreso
  * US-21 a US-25
+ * TODO: Implementar componentes del Módulo 5
  */
 export const SEGUIMIENTO_ROUTES: Routes = [
+  // Temporalmente vacío hasta implementar componentes
+  /*
   {
     path: 'hoy',
     loadComponent: () => import('./pages/actividades-hoy.component').then(m => m.ActividadesHoyComponent),
@@ -42,4 +45,5 @@ export const SEGUIMIENTO_ROUTES: Routes = [
     redirectTo: 'hoy',
     pathMatch: 'full'
   }
+  */
 ];

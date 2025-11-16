@@ -27,8 +27,8 @@ import { UnidadesMedida } from '../../../shared/models/perfil.model';
             <div class="unidades-options">
               <div 
                 class="unidad-card"
-                [class.selected]="unidadSeleccionada() === 'KG'"
-                (click)="seleccionarUnidad('KG')"
+                [class.selected]="unidadSeleccionada() === UnidadesMedida.KG"
+                (click)="seleccionarUnidad(UnidadesMedida.KG)"
               >
                 <div class="unidad-icon">⚖️</div>
                 <h3>Kilogramos (KG)</h3>
@@ -37,15 +37,15 @@ import { UnidadesMedida } from '../../../shared/models/perfil.model';
                   <span class="ejemplo-label">Ejemplo:</span>
                   <span class="ejemplo-valor">70.5 kg</span>
                 </div>
-                @if (unidadSeleccionada() === 'KG') {
+                @if (unidadSeleccionada() === UnidadesMedida.KG) {
                   <div class="check-icon">✓</div>
                 }
               </div>
 
               <div 
                 class="unidad-card"
-                [class.selected]="unidadSeleccionada() === 'LBS'"
-                (click)="seleccionarUnidad('LBS')"
+                [class.selected]="unidadSeleccionada() === UnidadesMedida.LBS"
+                (click)="seleccionarUnidad(UnidadesMedida.LBS)"
               >
                 <div class="unidad-icon">📏</div>
                 <h3>Libras (LBS)</h3>
@@ -54,7 +54,7 @@ import { UnidadesMedida } from '../../../shared/models/perfil.model';
                   <span class="ejemplo-label">Ejemplo:</span>
                   <span class="ejemplo-valor">155.4 lbs</span>
                 </div>
-                @if (unidadSeleccionada() === 'LBS') {
+                @if (unidadSeleccionada() === UnidadesMedida.LBS) {
                   <div class="check-icon">✓</div>
                 }
               </div>
@@ -319,6 +319,9 @@ import { UnidadesMedida } from '../../../shared/models/perfil.model';
   `]
 })
 export class ConfigurarUnidadesComponent implements OnInit {
+  // Hacer el enum accesible en el template
+  readonly UnidadesMedida = UnidadesMedida;
+
   private perfilService = inject(PerfilService);
   private notificationService = inject(NotificationService);
   private router = inject(Router);

@@ -555,9 +555,28 @@ export class LoginComponent {
 
       this.authService.login(credentials).subscribe({
         next: () => {
-          this.router.navigate(['/dashboard']);
+          // Agregar un pequeño delay para asegurar que los signals se actualicen
+          setTimeout(() => {
+            const user = this.authService.currentUser();
+            const isAdmin = this.authService.isAdmin();
+            
+            console.log('🔄 Redirigiendo usuario...');
+            console.log('👤 Usuario actual:', user);
+            console.log('🔑 Es admin?:', isAdmin);
+            console.log('📊 id_rol:', user?.id_rol);
+            
+            // Redirigir según el rol del usuario
+            if (isAdmin) {
+              console.log('✅ Redirigiendo a /admin/dashboard');
+              this.router.navigate(['/admin/dashboard']);
+            } else {
+              console.log('✅ Redirigiendo a /dashboard');
+              this.router.navigate(['/dashboard']);
+            }
+          }, 100);
         },
         error: (error) => {
+          console.error('❌ Error en login:', error);
           this.errorMessage.set('Credenciales incorrectas. Por favor, verifica tus datos.');
           this.loading.set(false);
         }
