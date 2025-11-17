@@ -23,7 +23,7 @@ export const routes: Routes = [
       {
         path: '',
         loadChildren: () => import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES)
-      }
+      },
     ]
   },
 
@@ -63,8 +63,13 @@ export const routes: Routes = [
       path: 'comidas',
       loadChildren: () => import('./features/comidas/comidas.routes').then(m => m.COMIDAS_ROUTES),
       canActivate: [adminGuard]
+      },
+      {
+        path: 'usuario',
+        loadChildren: () => import('./features/usuario/usuario.routes').then(m => m.USUARIO_ROUTES)
       }
-    ]
+    ],
+
   },
 
   // =============================================================================
