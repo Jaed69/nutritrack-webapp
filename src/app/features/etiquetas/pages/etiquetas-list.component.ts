@@ -20,18 +20,6 @@ import {
   imports: [CommonModule, FormsModule],
   template: `
     <div class="etiquetas-container">
-      
-      <!-- Header -->
-      <div class="page-header">
-        <div>
-          <h1>Gestión de Etiquetas</h1>
-          <p>Administra las etiquetas del sistema para clasificar ingredientes, ejercicios y comidas</p>
-        </div>
-        <button (click)="abrirModalCrear()" class="btn-primary">
-          <span>+</span>
-          Nueva Etiqueta
-        </button>
-      </div>
 
       <!-- Stats Cards -->
       <div class="stats-grid">
@@ -94,6 +82,11 @@ import {
             class="search-input"
           />
         </div>
+        
+        <button (click)="abrirModalCrear()" class="btn-primary">
+          <span>+</span>
+          Nueva Etiqueta
+        </button>
       </div>
 
       @if (loading()) {
@@ -378,33 +371,7 @@ import {
   styles: [`
     .etiquetas-container {
       padding: 30px;
-      background: #F8F9FA;
       min-height: 100vh;
-    }
-
-    /* Header */
-    .page-header {
-      background: white;
-      border-radius: 16px;
-      padding: 25px 30px;
-      box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.04);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-    }
-
-    .page-header h1 {
-      color: #333333;
-      font-size: 32px;
-      font-weight: 700;
-      margin: 0 0 5px 0;
-    }
-
-    .page-header p {
-      color: #6C757D;
-      font-size: 14px;
-      margin: 0;
     }
 
     /* Buttons */
@@ -477,37 +444,30 @@ import {
     }
 
     .stat-card {
+      flex: 1 1 260px;       /* min = 260px, grow = 1 */
+      max-width: 100%;       /* evita overflow */
       background: white;
       border-radius: 16px;
       padding: 25px;
       box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.04);
-      position: relative;
       overflow: hidden;
     }
 
-    .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
+
+    .stat-card.green-border {
+      border-top: solid 5px #24B86F;
     }
 
-    .stat-card.green-border::before {
-      background: linear-gradient(179deg, #28A745 0%, #20C997 100%);
+    .stat-card.yellow-border {
+      border-top: solid 5px #FEA00D;
+    }
+    
+    .stat-card.red-border {
+      border-top: solid 5px #E23A69;
     }
 
-    .stat-card.yellow-border::before {
-      background: linear-gradient(179deg, #FFC107 0%, #FD7E14 100%);
-    }
-
-    .stat-card.red-border::before {
-      background: linear-gradient(179deg, #DC3545 0%, #E83E8C 100%);
-    }
-
-    .stat-card.purple-border::before {
-      background: linear-gradient(179deg, #6F42C1 0%, #007BFF 100%);
+    .stat-card.purple-border {
+      border-top: solid 5px #385EE0;
     }
 
     .stat-header {
@@ -569,6 +529,8 @@ import {
 
     /* Search Card */
     .search-card {
+      display: flex;
+      justify-content: space-between;
       background: white;
       border-radius: 16px;
       padding: 20px 25px;
@@ -578,7 +540,7 @@ import {
 
     .search-input-wrapper {
       position: relative;
-      max-width: 500px;
+      width: 500px;
     }
 
     .search-icon {

@@ -1,7 +1,9 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { ROUTE_MESSAGES } from '../../core/constants/route-messages';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-navbar',
@@ -9,25 +11,34 @@ import { AuthService } from '../../core/services/auth.service';
   imports: [CommonModule],
   template: `
     <nav class="navbar">
- 
-
       <div class="navbar-user">
         <div class="welcome-card">
           <div class="welcome-content">
-            <h1>¡Hola, {{ authService.currentUser()?.nombre }}!</h1>
-            <p>Aquí tienes tu resumen completo de salud y bienestar</p>
+            <h1>
+              {{ currentTitle() }}
+              @if (showName()) {
+                <span>{{ authService.currentUser()?.nombre }}</span>
+              }
+            </h1>
+            <p>{{ currentSubtitle() }}</p>
           </div>
           <div class="welcome-actions">
             <div class="user-profile">
-              <div class="avatar">{{ authService.currentUser()?.nombre?.charAt(0) }}</div>
+              <div class="avatar">
+                {{ authService.currentUser()?.nombre?.charAt(0) }}
+              </div>
               <div class="user-info">
-                <div class="user-name">{{ authService.currentUser()?.nombre }}</div>
-                  @if (isAdmin()) {
-                    <div class="user-plan">Admin</div>
-                  } 
+                <div class="user-name">
+                  {{ authService.currentUser()?.nombre }}
+                </div>
+                @if (isAdmin()) {
+                  <div class="user-plan">Admin</div>
+                }
               </div>
             </div>
-            <button (click)="logout()" class="btn-logout">Cerrar Sesión</button>
+            <button (click)="logout()" class="btn-logout">
+              Cerrar Sesión
+            </button>
           </div>
         </div>
       </div>
@@ -42,18 +53,6 @@ import { AuthService } from '../../core/services/auth.service';
       justify-content: space-between;
       color: white;
       padding: 0px 30px;
-    }
-
-
-    .logo-icon {
-      font-size: 2rem;
-    }
-
-    .navbar-brand a {
-      font-size: 1.5rem;
-      font-weight: bold;
-      color: white;
-      text-decoration: none;
     }
 
     .navbar-user {
@@ -91,31 +90,6 @@ import { AuthService } from '../../core/services/auth.service';
       display: flex;
       align-items: center;
       gap: 20px;
-    }
-
-    .quick-buttons {
-      display: flex;
-      gap: 10px;
-    }
-
-    .quick-btn {
-      background: linear-gradient(159deg, #28A745 0%, #20C997 100%);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 16px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .quick-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
     }
 
     .user-profile {
@@ -164,12 +138,56 @@ import { AuthService } from '../../core/services/auth.service';
     }
   `]
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit {
+
   authService = inject(AuthService);
+  private router = inject(Router);
+
+  currentTitle = signal('');
+  currentSubtitle = signal('');
+  showName = signal(false);
+
+  // señal derivada para admin
+  isAdmin = computed(
+    () => this.authService.currentUser()?.role === 'ROLE_ADMIN'
+  );
+
+  ngOnInit(): void {
+    // 1) Ejecutar una vez al inicio
+    this.actualizarMensajes(this.router.url);
+
+    // 2) Escuchar solo cuando termina la navegación
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event: any) => {
+        const url = event.urlAfterRedirects ?? event.url;
+        this.actualizarMensajes(url);
+      });
+  }
+
+  private actualizarMensajes(url: string): void {
+    const path = url.split('?')[0];
+
+    console.log('Navbar URL:', url);
+    console.log('Navbar PATH:', path);
+    console.log('ROUTE_MESSAGES keys:', Object.keys(ROUTE_MESSAGES));
+    console.log('Mensaje para path:', ROUTE_MESSAGES[path]);
+
+    const message = ROUTE_MESSAGES[path];
+
+    if (message) {
+      this.currentTitle.set(message.title ?? '');
+      this.currentSubtitle.set(message.subtitle ?? '');
+      this.showName.set(!!message.showName);
+    } else {
+      // Opcional: valores por defecto si no hay match
+      this.currentTitle.set('');
+      this.currentSubtitle.set('');
+      this.showName.set(false);
+    }
+  }
 
   logout(): void {
     this.authService.logout();
   }
-
-  isAdmin = computed(() => this.authService.currentUser()?.role === 'ROLE_ADMIN');
 }

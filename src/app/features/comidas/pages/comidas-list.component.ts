@@ -23,18 +23,6 @@ import { Ingrediente } from '../../../core/models/ingrediente.model';
   imports: [CommonModule, FormsModule],
   template: `
     <div class="comidas-container">
-      
-      <!-- Header -->
-      <div class="page-header">
-        <div>
-          <h1>Gestión de Comidas y Recetas</h1>
-          <p>Administración completa de comidas con ingredientes y recetas</p>
-        </div>
-        <button (click)="abrirModalCrear()" class="btn-primary">
-          <span>+</span>
-          Nueva Comida
-        </button>
-      </div>
 
       <!-- Stats Cards -->
       <div class="stats-grid">
@@ -98,6 +86,10 @@ import { Ingrediente } from '../../../core/models/ingrediente.model';
               class="search-input"
             />
           </div>
+          <button (click)="abrirModalCrear()" class="btn-primary">
+            <span>+</span>
+            Nueva Comida
+          </button>
         </div>
 
         <div class="filter-section">
@@ -700,7 +692,6 @@ import { Ingrediente } from '../../../core/models/ingrediente.model';
     /* Base styles (iguales a ingredientes) */
     .comidas-container {
       padding: 30px;
-      background: #F8F9FA;
       min-height: 100vh;
     }
 
@@ -816,37 +807,30 @@ import { Ingrediente } from '../../../core/models/ingrediente.model';
     }
 
     .stat-card {
+      flex: 1 1 260px;       /* min = 260px, grow = 1 */
+      max-width: 100%;       /* evita overflow */
       background: white;
       border-radius: 16px;
       padding: 25px;
       box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.04);
-      position: relative;
       overflow: hidden;
     }
 
-    .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
+
+    .stat-card.green-border {
+      border-top: solid 5px #24B86F;
     }
 
-    .stat-card.green-border::before {
-      background: linear-gradient(179deg, #28A745 0%, #20C997 100%);
+    .stat-card.yellow-border {
+      border-top: solid 5px #FEA00D;
+    }
+    
+    .stat-card.red-border {
+      border-top: solid 5px #E23A69;
     }
 
-    .stat-card.yellow-border::before {
-      background: linear-gradient(179deg, #FFC107 0%, #FD7E14 100%);
-    }
-
-    .stat-card.red-border::before {
-      background: linear-gradient(179deg, #DC3545 0%, #E83E8C 100%);
-    }
-
-    .stat-card.purple-border::before {
-      background: linear-gradient(179deg, #6F42C1 0%, #007BFF 100%);
+    .stat-card.purple-border {
+      border-top: solid 5px #385EE0;
     }
 
     .stat-header {
@@ -917,11 +901,13 @@ import { Ingrediente } from '../../../core/models/ingrediente.model';
 
     .search-section {
       margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
     }
 
     .search-input-wrapper {
       position: relative;
-      max-width: 500px;
+      width: 500px;
     }
 
     .search-icon {
