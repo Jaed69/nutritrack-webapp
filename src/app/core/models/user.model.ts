@@ -44,3 +44,27 @@ export interface UserResponse {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface Usuario {
+  id: number;
+  nombre: string;
+  apellido: string;
+  email: string;
+  role: string;
+  active: boolean;
+  createdAt: string;
+}
+
+// ===== GENERIC RESPONSE WRAPPERS =====
+export interface ApiResponse<T> {
+  message: string;
+  data: T;
+}
+
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+}
