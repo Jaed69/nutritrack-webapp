@@ -102,8 +102,8 @@ import { AuthService } from '../../core/services/auth.service';
     .sidebar {
       position: fixed;
       left: 0;
-      top: var(--navbar-height);
-      height: calc(100vh - var(--navbar-height));
+      top: 0;
+      height: 100vh;
       width: var(--sidebar-width);
       background: var(--color-background-light);
       box-shadow: var(--shadow-md);
@@ -251,8 +251,8 @@ import { AuthService } from '../../core/services/auth.service';
 
     @media (max-width: 768px) {
       .sidebar {
-        top: 60px;
-        height: calc(100vh - 60px);
+        top: 0;
+        height: 100vh;
       }
 
       .toggle-btn {
