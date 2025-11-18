@@ -1,0 +1,165 @@
+// ========================================
+// ANGULAR MATERIAL CUSTOM THEME
+// ========================================
+
+@use '@angular/material' as mat;
+
+// Include the common styles for Angular Material
+@include mat.core();
+
+// Define custom color palettes using Material's predefined palettes
+$nutritrack-primary: mat.m2-define-palette(mat.$m2-blue-palette, 900);
+$nutritrack-accent: mat.m2-define-palette(mat.$m2-green-palette, 900);
+$nutritrack-warn: mat.m2-define-palette(mat.$m2-red-palette, 900);
+
+// Create the theme using the custom palettes
+$nutritrack-theme: mat.m2-define-light-theme((
+  color: (
+    primary: $nutritrack-primary,
+    accent: $nutritrack-accent,
+    warn: $nutritrack-warn,
+  ),
+  typography: mat.m2-define-typography-config(
+    $font-family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+  ),
+  density: 0,
+));
+
+// Include theme styles for core and each component
+@include mat.all-component-themes($nutritrack-theme);
+
+// ========================================
+// CUSTOM MATERIAL COMPONENT OVERRIDES
+// ========================================
+
+// Button customizations
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-flat-button,
+.mat-mdc-stroked-button {
+  border-radius: 8px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+  transition: all 0.3s ease;
+}
+
+.mat-mdc-raised-button:not(:disabled):hover,
+.mat-mdc-flat-button:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+// Card customizations
+.mat-mdc-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.mat-mdc-card:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+// Form field customizations
+.mat-mdc-form-field {
+  width: 100%;
+}
+
+.mat-mdc-text-field-wrapper {
+  border-radius: 8px;
+}
+
+// Input customizations
+.mat-mdc-input-element {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+// Dialog customizations
+.mat-mdc-dialog-container {
+  border-radius: 12px;
+}
+
+// Snackbar customizations
+.mat-mdc-snack-bar-container {
+  border-radius: 8px;
+}
+
+// Chip customizations
+.mat-mdc-chip {
+  border-radius: 16px;
+  font-weight: 500;
+}
+
+// Tab customizations
+.mat-mdc-tab-labels {
+  border-radius: 8px 8px 0 0;
+}
+
+// Tooltip customizations
+.mat-mdc-tooltip {
+  font-size: 0.875rem;
+  border-radius: 6px;
+}
+
+// Menu customizations
+.mat-mdc-menu-panel {
+  border-radius: 8px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+// Progress bar customizations
+.mat-mdc-progress-bar {
+  border-radius: 4px;
+}
+
+// Slider customizations
+.mat-mdc-slider {
+  .mdc-slider__track {
+    border-radius: 4px;
+  }
+}
+
+// Table customizations
+.mat-mdc-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+// Expansion panel customizations
+.mat-expansion-panel {
+  border-radius: 8px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+// Stepper customizations
+.mat-stepper-horizontal,
+.mat-stepper-vertical {
+  border-radius: 8px;
+}
+
+// List customizations
+.mat-mdc-list-item {
+  border-radius: 8px;
+}
+
+// ========================================
+// RESPONSIVE CUSTOMIZATIONS
+// ========================================
+
+@media (max-width: 768px) {
+  .mat-mdc-dialog-container {
+    max-width: 95vw !important;
+  }
+
+  .mat-mdc-card {
+    margin: 0.5rem;
+  }
+
+  .mat-mdc-button,
+  .mat-mdc-raised-button,
+  .mat-mdc-flat-button {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+}

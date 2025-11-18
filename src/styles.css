@@ -1,6 +1,9 @@
 /* ========================================
-   GLOBAL STYLES - FINTECH APP
+   GLOBAL STYLES - NUTRITRACK APP
    ======================================== */
+
+/* Import Angular Material Theme */
+@import './theme.scss';
 
 /* === CSS VARIABLES (Custom Properties) === */
 :root {

@@ -292,13 +292,24 @@ src/app/
 ### Dependencies Instaladas
 ```json
 {
+  "@angular/animations": "^20.3.12",
+  "@angular/cdk": "^20.2.13",
   "@angular/common": "^20.3.0",
   "@angular/core": "^20.3.0",
   "@angular/forms": "^20.3.0",
+  "@angular/material": "^20.2.13",
   "@angular/router": "^20.3.0",
   "rxjs": "~7.8.0"
 }
 ```
+
+### Angular Material Configurado ✅
+- **Tema personalizado:** `src/theme.scss`
+- **Paleta de colores:** Basada en colores corporativos NuTriTrack
+- **Módulos disponibles:** Archivo barrel en `shared/material.modules.ts`
+- **Animaciones:** Configuradas en `app.config.ts`
+- **Guía de uso:** `docs/ANGULAR_MATERIAL_GUIDE.md`
+- **Guía de migración:** `docs/MIGRATION_TO_MATERIAL.md`
 
 ### Environment Configuration
 
