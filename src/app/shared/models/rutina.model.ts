@@ -3,20 +3,24 @@
  * Backend: /api/v1/admin/rutinas
  */
 
+import { Etiqueta, PagedResponse, DiaSemana } from './common.model';
+
+// Re-exportar para compatibilidad
+export type { Etiqueta, PagedResponse, DiaSemana };
+
 export enum NivelDificultad {
   PRINCIPIANTE = 'PRINCIPIANTE',
   INTERMEDIO = 'INTERMEDIO',
-  AVANZADO = 'AVANZADO'
+  AVANZADO = 'AVANZADO',
+  EXPERTO = 'EXPERTO'
 }
 
-export enum DiaSemana {
-  LUNES = 'LUNES',
-  MARTES = 'MARTES',
-  MIERCOLES = 'MIERCOLES',
-  JUEVES = 'JUEVES',
-  VIERNES = 'VIERNES',
-  SABADO = 'SABADO',
-  DOMINGO = 'DOMINGO'
+export enum ObjetivoRutina {
+  PERDER_PESO = 'PERDER_PESO',
+  GANAR_MASA_MUSCULAR = 'GANAR_MASA_MUSCULAR',
+  MANTENER_FORMA = 'MANTENER_FORMA',
+  REHABILITACION = 'REHABILITACION',
+  CONTROLAR_ESTRES = 'CONTROLAR_ESTRES'
 }
 
 export interface CrearRutinaRequest {
@@ -24,8 +28,7 @@ export interface CrearRutinaRequest {
   descripcion: string;
   duracionSemanas: number;
   nivelDificultad: NivelDificultad;
-  frecuenciaSemanal: number;
-  etiquetaIds: number[];
+  objetivo: ObjetivoRutina;
 }
 
 export interface ActualizarRutinaRequest {
@@ -33,10 +36,9 @@ export interface ActualizarRutinaRequest {
   descripcion?: string;
   duracionSemanas?: number;
   nivelDificultad?: NivelDificultad;
-  frecuenciaSemanal?: number;
-  etiquetaIds?: number[];
-  activo?: boolean;
+  objetivo?: ObjetivoRutina;
 }
+
 
 export interface RutinaResponse {
   id: number;
@@ -44,59 +46,63 @@ export interface RutinaResponse {
   descripcion: string;
   duracionSemanas: number;
   nivelDificultad: NivelDificultad;
-  frecuenciaSemanal: number;
-  etiquetas: Array<{
-    id: number;
-    nombre: string;
-    tipo: string;
-  }>;
+  objetivo: ObjetivoRutina | null;
+  etiquetas: Etiqueta[];
   activo: boolean;
-  fechaCreacion: string;
-  fechaActualizacion: string;
+  createdAt: string | null;
+  updatedAt: string | null;
+  totalEjerciciosProgramados?: number;
   numeroUsuariosActivos?: number;
+  ejercicios?: EjercicioRutinaResponse[];
 }
 
 export interface EjercicioRutinaRequest {
-  ejercicioId: number;
+  idEjercicio: number;
+  orden: number;
   series: number;
   repeticiones: number;
   peso?: number;
   duracionMinutos?: number;
-  tiempoDescanso?: number;
-  diaSemana: DiaSemana;
-  orden: number;
+  descansoSegundos?: number;
   notas?: string;
 }
 
 export interface ActualizarEjercicioRutinaRequest {
+  idEjercicio?: number;
+  orden?: number;
   series?: number;
   repeticiones?: number;
   peso?: number;
   duracionMinutos?: number;
-  tiempoDescanso?: number;
-  diaSemana?: DiaSemana;
-  orden?: number;
+  descansoSegundos?: number;
   notas?: string;
+}
+
+export interface EjercicioInfo {
+  id: number;
+  nombre: string;
+  descripcion: string;
+  tipoEjercicio: string;
+  grupoMuscular: string;
+  nivelDificultad: string;
 }
 
 export interface EjercicioRutinaResponse {
   id: number;
-  ejercicioId: number;
-  nombreEjercicio: string;
-  descripcionEjercicio: string;
+  ejercicio: EjercicioInfo;
+  orden: number;
   series: number;
   repeticiones: number;
   peso?: number;
   duracionMinutos?: number;
-  tiempoDescanso?: number;
-  diaSemana: DiaSemana;
-  orden: number;
+  descansoSegundos?: number;
   notas?: string;
+  // Propiedades para compatibilidad con componentes
+  diaSemana?: DiaSemana;
+  nombreEjercicio?: string;
+  tiempoDescanso?: number;
 }
 
 export interface RutinaDetalleResponse extends RutinaResponse {
   ejercicios: EjercicioRutinaResponse[];
-  ejerciciosPorDia: {
-    [dia: string]: EjercicioRutinaResponse[];
-  };
 }

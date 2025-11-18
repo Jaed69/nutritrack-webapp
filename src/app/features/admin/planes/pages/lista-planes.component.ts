@@ -2,6 +2,13 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatChipsModule } from '@angular/material/chips';
 import { PlanService } from '../../services/plan.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { PlanResponse } from '../../../../shared/models';
@@ -14,331 +21,508 @@ import { PlanResponse } from '../../../../shared/models';
 @Component({
   selector: 'app-lista-planes',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [
+    CommonModule,
+    RouterLink,
+    FormsModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatCheckboxModule,
+    MatChipsModule
+  ],
   template: `
-    <div class="planes-container">
-      <div class="header">
-        <h1>Gestión de Planes Nutricionales</h1>
-        <button class="btn-primary" routerLink="/admin/planes/crear">
-          <i class="icon">+</i> Crear Plan
+    <div class="page-container">
+      <!-- Header -->
+      <div class="page-header">
+        <div class="header-content">
+          <h1 class="page-title">
+            <mat-icon>restaurant_menu</mat-icon>
+            Gestión de Planes Nutricionales
+          </h1>
+          <p class="page-subtitle">Crea, edita y gestiona todos los planes nutricionales desde aquí.</p>
+        </div>
+        <button mat-raised-button color="primary" routerLink="/admin/planes/crear">
+          <mat-icon>add</mat-icon>
+          Crear Nuevo Plan
         </button>
       </div>
 
-      <div class="filters">
-        <div class="search-box">
-          <input
-            type="text"
-            [(ngModel)]="filtroNombre"
-            (ngModelChange)="filtrarPlanes()"
-            placeholder="Buscar por nombre..."
-          />
-        </div>
-        <label class="checkbox-label">
-          <input
-            type="checkbox"
-            [(ngModel)]="mostrarInactivos"
-            (ngModelChange)="cargarPlanes()"
-          />
-          Mostrar planes inactivos
-        </label>
-      </div>
+      <!-- Search & Filters -->
+      <mat-card class="filters-card">
+        <mat-card-content>
+          <div class="filters">
+            <mat-form-field class="search-field" appearance="outline">
+              <mat-label>Buscar planes</mat-label>
+              <input
+                matInput
+                [(ngModel)]="filtroNombre"
+                (ngModelChange)="filtrarPlanes()"
+                placeholder="Buscar por nombre..."
+              />
+              <mat-icon matPrefix>search</mat-icon>
+            </mat-form-field>
+            <mat-checkbox
+              [(ngModel)]="mostrarInactivos"
+              (ngModelChange)="cargarPlanes()"
+            >
+              Mostrar planes inactivos
+            </mat-checkbox>
+          </div>
+        </mat-card-content>
+      </mat-card>
 
+      <!-- Loading State -->
       @if (loading()) {
-        <div class="loading">Cargando planes...</div>
-      }
-
-      @if (!loading() && planesFiltrados().length === 0) {
-        <div class="empty-state">
-          <p>No hay planes registrados</p>
-          <button class="btn-primary" routerLink="/admin/planes/crear">
-            Crear el primer plan
-          </button>
+        <div class="loading-state">
+          <mat-icon>hourglass_empty</mat-icon>
+          <p>Cargando planes...</p>
         </div>
       }
 
-      @if (!loading() && planesFiltrados().length > 0) {
-        <div class="planes-grid">
-          @for (plan of planesFiltrados(); track plan.id) {
-            <div class="plan-card" [class.inactivo]="!plan.activo">
-              <div class="plan-header">
-                <h3>{{ plan.nombre }}</h3>
-                <span class="badge" [class.badge-inactive]="!plan.activo">
-                  {{ plan.activo ? 'Activo' : 'Inactivo' }}
-                </span>
-              </div>
-
-              <p class="plan-description">{{ plan.descripcion }}</p>
-
-              <div class="plan-stats">
-                <div class="stat">
-                  <span class="stat-label">Duración:</span>
-                  <span class="stat-value">{{ plan.duracionDias }} días</span>
-                </div>
-                <div class="stat">
-                  <span class="stat-label">Objetivo:</span>
-                  <span class="stat-value">{{ formatearObjetivo(plan.objetivo.tipoObjetivo) }}</span>
-                </div>
-                <div class="stat">
-                  <span class="stat-label">Calorías:</span>
-                  <span class="stat-value">{{ plan.objetivo.caloriasObjetivo }} kcal</span>
-                </div>
-                @if (plan.numeroUsuariosActivos !== undefined && plan.numeroUsuariosActivos > 0) {
-                  <div class="stat usuarios-activos">
-                    <span class="stat-label">Usuarios activos:</span>
-                    <span class="stat-value">{{ plan.numeroUsuariosActivos }}</span>
-                  </div>
-                }
-              </div>
-
-              <div class="plan-etiquetas">
-                @for (etiqueta of plan.etiquetas; track etiqueta.id) {
-                  <span class="etiqueta">{{ etiqueta.nombre }}</span>
-                }
-              </div>
-
-              <div class="plan-actions">
-                <button class="btn-secondary" [routerLink]="['/admin/planes', plan.id, 'editar']">
-                  Editar
-                </button>
-                <button class="btn-secondary" [routerLink]="['/admin/planes', plan.id, 'dias']">
-                  Configurar Días
-                </button>
-                <button
-                  class="btn-danger"
-                  (click)="confirmarEliminar(plan)"
-                  [disabled]="plan.numeroUsuariosActivos && plan.numeroUsuariosActivos > 0"
-                >
-                  Eliminar
-                </button>
-              </div>
+      <!-- Empty State -->
+      @if (!loading() && planesFiltrados().length === 0) {
+        <mat-card>
+          <mat-card-content>
+            <div class="empty-state">
+              <mat-icon class="empty-icon">restaurant_menu</mat-icon>
+              <h3>No hay planes registrados</h3>
+              <p>Comienza creando tu primer plan nutricional para el sistema</p>
+              <button mat-raised-button color="primary" routerLink="/admin/planes/crear">
+                <mat-icon>add</mat-icon>
+                Crear Primer Plan
+              </button>
             </div>
-          }
+          </mat-card-content>
+        </mat-card>
+      }
+
+      <!-- Table View -->
+      @if (!loading() && planesFiltrados().length > 0) {
+        <div class="table-container">
+          <table class="plans-table">
+            <thead>
+              <tr>
+                <th>Nombre del Plan</th>
+                <th>Duración</th>
+                <th>Objetivo</th>
+                <th>Estado</th>
+                <th>Fecha de Creación</th>
+                <th class="actions-column"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (plan of planesFiltrados(); track plan.id) {
+                <tr class="plan-row" [class.inactive]="!plan.activo">
+                  <td class="plan-name-cell">
+                    <div class="plan-name">{{ plan.nombre }}</div>
+                  </td>
+                  <td>
+                    <span class="duration-badge">{{ plan.duracionDias }} Semanas</span>
+                  </td>
+                  <td>
+                    @for (etiqueta of plan.etiquetas; track etiqueta.id) {
+                      <span class="objective-chip">{{ etiqueta.nombre }}</span>
+                    }
+                  </td>
+                  <td>
+                    <span class="status-badge" [class.active]="plan.activo" [class.inactive]="!plan.activo">
+                      {{ plan.activo ? 'Activo' : 'Inactivo' }}
+                    </span>
+                  </td>
+                  <td class="date-cell">
+                    {{ formatearFecha(plan.createdAt) }}
+                  </td>
+                  <td class="actions-cell">
+                    <button class="btn-icon" [routerLink]="['/admin/planes', plan.id]" title="Ver detalles">
+                      <mat-icon>visibility</mat-icon>
+                    </button>
+                    <button class="btn-icon" [routerLink]="['/admin/planes', plan.id, 'editar']" title="Editar">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button
+                      class="btn-icon btn-delete"
+                      (click)="confirmarEliminar(plan)"
+                      [disabled]="plan.numeroUsuariosActivos && plan.numeroUsuariosActivos > 0"
+                      title="Eliminar"
+                    >
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <button class="btn-pagination" (click)="paginaAnterior()" [disabled]="paginaActual() === 0">
+            <mat-icon>chevron_left</mat-icon>
+            Anterior
+          </button>
+          
+          <div class="page-numbers">
+            @for (pagina of paginasVisibles(); track pagina) {
+              @if (pagina === '...') {
+                <span class="page-ellipsis">{{ pagina }}</span>
+              } @else {
+                <button
+                  class="page-number"
+                  [class.active]="pagina === paginaActual() + 1"
+                  (click)="irAPagina(Number(pagina) - 1)"
+                >
+                  {{ pagina }}
+                </button>
+              }
+            }
+          </div>
+
+          <button class="btn-pagination" (click)="paginaSiguiente()" [disabled]="paginaActual() >= totalPaginas() - 1">
+            Siguiente
+            <mat-icon>chevron_right</mat-icon>
+          </button>
         </div>
       }
     </div>
   `,
   styles: [`
-    .planes-container {
+    .page-container {
       padding: 2rem;
       max-width: 1400px;
       margin: 0 auto;
+      background: #f5f5f5;
+      min-height: 100vh;
     }
 
-    .header {
+    /* Header */
+    .page-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
       margin-bottom: 2rem;
     }
 
-    h1 {
+    .header-content {
+      flex: 1;
+    }
+
+    .page-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 0 0 0.5rem 0;
       font-size: 2rem;
-      color: #2d3748;
+      color: #333;
+    }
+
+    .page-title mat-icon {
+      font-size: 2rem;
+      width: 2rem;
+      height: 2rem;
+      color: var(--primary-color, #00A859);
+    }
+
+    .page-subtitle {
       margin: 0;
+      color: #666;
+      font-size: 1rem;
+    }
+
+    /* Filters */
+    .filters-card {
+      margin-bottom: 2rem;
     }
 
     .filters {
       display: flex;
-      gap: 1rem;
-      margin-bottom: 2rem;
+      gap: 1.5rem;
       align-items: center;
+      flex-wrap: wrap;
     }
 
-    .search-box {
+    .search-field {
       flex: 1;
-      max-width: 400px;
+      min-width: 300px;
     }
 
-    .search-box input {
-      width: 100%;
-      padding: 0.75rem;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: 1rem;
-    }
-
-    .checkbox-label {
+    mat-checkbox {
       display: flex;
       align-items: center;
       gap: 0.5rem;
       cursor: pointer;
     }
 
-    .planes-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-      gap: 1.5rem;
-    }
-
-    .plan-card {
-      background: white;
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .plan-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-    }
-
-    .plan-card.inactivo {
-      opacity: 0.7;
-      background: #f7fafc;
-    }
-
-    .plan-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: start;
-      margin-bottom: 1rem;
-    }
-
-    .plan-header h3 {
-      margin: 0;
-      font-size: 1.25rem;
-      color: #2d3748;
-      flex: 1;
-    }
-
-    .badge {
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.875rem;
-      font-weight: 600;
-      background: #48bb78;
-      color: white;
-    }
-
-    .badge-inactive {
-      background: #cbd5e0;
-      color: #4a5568;
-    }
-
-    .plan-description {
-      color: #718096;
-      margin-bottom: 1rem;
-      line-height: 1.5;
-    }
-
-    .plan-stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-      margin-bottom: 1rem;
-      padding: 1rem;
-      background: #f7fafc;
+    /* Table */
+    .table-container {
+      background: #FFFFFF;
       border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      border: 1px solid #e2e8f0;
     }
 
-    .stat {
-      display: flex;
-      flex-direction: column;
+    .plans-table {
+      width: 100%;
+      border-collapse: collapse;
     }
 
-    .stat-label {
-      font-size: 0.875rem;
-      color: #718096;
-      margin-bottom: 0.25rem;
+    .plans-table thead {
+      background: #f8f9fa;
+      border-bottom: 2px solid #e2e8f0;
     }
 
-    .stat-value {
-      font-size: 1rem;
+    .plans-table th {
+      padding: 1rem 1.5rem;
+      text-align: left;
+      font-size: 0.75rem;
       font-weight: 600;
-      color: #2d3748;
+      color: #6c757d;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
-    .usuarios-activos {
-      grid-column: 1 / -1;
-      background: #fed7d7;
+    .plans-table tbody tr {
+      border-bottom: 1px solid #e2e8f0;
+      transition: background 0.15s;
+    }
+
+    .plans-table tbody tr:hover {
+      background: #f8f9fa;
+    }
+
+    .plans-table tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    .plans-table tbody tr.inactive {
+      opacity: 0.6;
+    }
+
+    .plans-table td {
+      padding: 1rem 1.5rem;
+      font-size: 0.875rem;
+      color: #212529;
+    }
+
+    .plan-name-cell {
+      font-weight: 500;
+    }
+
+    .plan-name {
+      color: #2d3748;
+      font-size: 0.95rem;
+    }
+
+    .duration-badge {
+      padding: 0.375rem 0.875rem;
+      background: #edf2f7;
+      color: #2d3748;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      white-space: nowrap;
+    }
+
+    .objective-chip {
+      display: inline-block;
+      padding: 0.375rem 0.875rem;
+      background: #00A859;
+      color: #FFFFFF;
+      border-radius: 16px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      margin-right: 0.5rem;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.375rem 0.875rem;
+      border-radius: 16px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+    }
+
+    .status-badge.active {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-badge.inactive {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .date-cell {
+      color: #718096;
+    }
+
+    .actions-cell {
+      text-align: right;
+    }
+
+    .actions-column {
+      text-align: right;
+      width: 150px;
+    }
+
+    .btn-icon {
+      background: transparent;
+      border: none;
+      color: #718096;
+      cursor: pointer;
       padding: 0.5rem;
       border-radius: 6px;
-    }
-
-    .usuarios-activos .stat-value {
-      color: #c53030;
-    }
-
-    .plan-etiquetas {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .etiqueta {
-      padding: 0.25rem 0.75rem;
-      background: #edf2f7;
-      color: #4a5568;
-      border-radius: 20px;
-      font-size: 0.875rem;
-    }
-
-    .plan-actions {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
-
-    .btn-primary, .btn-secondary, .btn-danger {
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
       transition: all 0.2s;
-      font-size: 0.875rem;
+      margin-left: 0.25rem;
     }
 
-    .btn-primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-    }
-
-    .btn-secondary {
+    .btn-icon:hover {
       background: #edf2f7;
-      color: #4a5568;
-      flex: 1;
+      color: #2d3748;
     }
 
-    .btn-secondary:hover {
-      background: #e2e8f0;
+    .btn-icon.btn-delete:hover {
+      background: #fff5f5;
+      color: #e53e3e;
     }
 
-    .btn-danger {
-      background: #fc8181;
-      color: white;
-    }
-
-    .btn-danger:hover:not(:disabled) {
-      background: #f56565;
-    }
-
-    .btn-danger:disabled {
-      opacity: 0.5;
+    .btn-icon:disabled {
+      opacity: 0.3;
       cursor: not-allowed;
     }
 
-    .loading, .empty-state {
+    .btn-icon mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 2rem;
+      padding: 1rem;
+    }
+
+    .btn-pagination {
+      min-width: 2.5rem;
+      height: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 0.75rem;
+      background: white;
+      color: #00A859;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.875rem;
+      font-weight: 500;
+      gap: 0.25rem;
+    }
+
+    .btn-pagination:hover:not(:disabled) {
+      background: #00A859;
+      color: white;
+      border-color: #00A859;
+    }
+
+    .btn-pagination:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      color: #6c757d;
+      background: #f8f9fa;
+    }
+
+    .page-numbers {
+      display: flex;
+      gap: 0.25rem;
+      align-items: center;
+    }
+
+    .page-number {
+      min-width: 2.5rem;
+      height: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      color: #00A859;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .page-number:hover {
+      background: #00A859;
+      color: white;
+      border-color: #00A859;
+    }
+
+    .page-number.active {
+      background: #00A859;
+      color: white;
+      border-color: #00A859;
+    }
+
+    .page-ellipsis {
+      color: #6c757d;
+      padding: 0 0.25rem;
+      font-weight: 500;
+    }
+
+    /* Loading State */
+    .loading-state {
       text-align: center;
-      padding: 3rem;
+      padding: 4rem;
       color: #718096;
     }
 
-    .empty-state p {
-      font-size: 1.125rem;
+    .loading-state mat-icon {
+      font-size: 3rem;
+      width: 3rem;
+      height: 3rem;
+      margin-bottom: 1rem;
+      color: #00A859;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+    }
+
+    .empty-icon {
+      font-size: 4rem;
+      width: 4rem;
+      height: 4rem;
+      color: #ccc;
       margin-bottom: 1rem;
     }
 
-    .icon {
-      font-size: 1.25rem;
-      margin-right: 0.25rem;
+    .empty-state h3 {
+      margin: 0 0 0.5rem 0;
+      color: #333;
+    }
+
+    .empty-state p {
+      color: #666;
+      margin-bottom: 1.5rem;
     }
   `]
 })
@@ -347,6 +531,13 @@ export class ListaPlanesComponent implements OnInit {
   mostrarInactivos = signal(false);
   filtroNombre = signal('');
   planesFiltrados = signal<PlanResponse[]>([]);
+  filtrosActivos = signal<string[]>([]);
+  paginaActual = signal(0);
+  totalPaginas = signal(1);
+  tamañoPagina = 20;
+  
+  // Helper para template
+  Number = Number;
 
   constructor(
     private planService: PlanService,
@@ -358,13 +549,101 @@ export class ListaPlanesComponent implements OnInit {
     this.cargarPlanes();
   }
 
+  toggleFiltros(): void {
+    // TODO: Implementar panel de filtros avanzados
+    this.mostrarInactivos.update(val => !val);
+    if (this.mostrarInactivos()) {
+      this.filtrosActivos.set(['Mostrar inactivos']);
+    } else {
+      this.filtrosActivos.set([]);
+    }
+    this.cargarPlanes();
+  }
+
+  removerFiltro(filtro: string): void {
+    this.filtrosActivos.update(filtros => filtros.filter(f => f !== filtro));
+    if (filtro === 'Mostrar inactivos') {
+      this.mostrarInactivos.set(false);
+      this.cargarPlanes();
+    }
+  }
+
+  paginaAnterior(): void {
+    if (this.paginaActual() > 0) {
+      this.paginaActual.update(p => p - 1);
+      this.cargarPlanes();
+    }
+  }
+
+  paginaSiguiente(): void {
+    if (this.paginaActual() < this.totalPaginas() - 1) {
+      this.paginaActual.update(p => p + 1);
+      this.cargarPlanes();
+    }
+  }
+
+  irAPagina(pagina: number): void {
+    this.paginaActual.set(pagina);
+    this.cargarPlanes();
+  }
+
+  paginasVisibles(): (number | string)[] {
+    const total = this.totalPaginas();
+    const actual = this.paginaActual() + 1;
+    const paginas: (number | string)[] = [];
+
+    if (total <= 7) {
+      // Mostrar todas las páginas si son 7 o menos
+      for (let i = 1; i <= total; i++) {
+        paginas.push(i);
+      }
+    } else {
+      // Siempre mostrar primera página
+      paginas.push(1);
+
+      if (actual > 3) {
+        paginas.push('...');
+      }
+
+      // Páginas alrededor de la actual
+      for (let i = Math.max(2, actual - 1); i <= Math.min(total - 1, actual + 1); i++) {
+        paginas.push(i);
+      }
+
+      if (actual < total - 2) {
+        paginas.push('...');
+      }
+
+      // Siempre mostrar última página
+      if (total > 1) {
+        paginas.push(total);
+      }
+    }
+
+    return paginas;
+  }
+
+  formatearFecha(fecha: string | null): string {
+    if (!fecha) return '-';
+    const date = new Date(fecha);
+    return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+
   cargarPlanes(): void {
     this.loading.set(true);
-    this.planService.obtenerPlanes(this.mostrarInactivos()).subscribe({
+    
+    // Si mostrarInactivos está activado, obtener todos los planes, sino solo activos
+    const observable = this.mostrarInactivos() 
+      ? this.planService.obtenerPlanes(this.paginaActual(), this.tamañoPagina)
+      : this.planService.obtenerPlanesActivos(this.paginaActual(), this.tamañoPagina);
+
+    observable.subscribe({
       next: (response) => {
         this.loading.set(false);
-        if (response.success) {
-          this.planesFiltrados.set(response.data || []);
+        if (response.success && response.data) {
+          this.planesFiltrados.set(this.planService.planes());
+          const totalElements = this.planService.totalElements();
+          this.totalPaginas.set(Math.ceil(totalElements / this.tamañoPagina));
         }
       },
       error: () => {
@@ -375,28 +654,35 @@ export class ListaPlanesComponent implements OnInit {
   }
 
   filtrarPlanes(): void {
-    const planes = this.planService.planes();
-    const filtro = this.filtroNombre().toLowerCase();
+    const filtro = this.filtroNombre().trim();
     
     if (!filtro) {
-      this.planesFiltrados.set(planes);
+      this.paginaActual.set(0);
+      this.cargarPlanes();
       return;
     }
 
-    const filtrados = planes.filter(plan =>
-      plan.nombre.toLowerCase().includes(filtro) ||
-      plan.descripcion.toLowerCase().includes(filtro)
-    );
-    this.planesFiltrados.set(filtrados);
+    // Buscar por nombre usando el endpoint del API
+    this.loading.set(true);
+    this.planService.buscarPlanes(filtro, this.paginaActual(), this.tamañoPagina).subscribe({
+      next: (response) => {
+        this.loading.set(false);
+        if (response.success && response.data) {
+          this.planesFiltrados.set(this.planService.planes());
+          const totalElements = this.planService.totalElements();
+          this.totalPaginas.set(Math.ceil(totalElements / this.tamañoPagina));
+        }
+      },
+      error: () => {
+        this.loading.set(false);
+        this.notificationService.showError('Error al buscar planes');
+      }
+    });
   }
 
   confirmarEliminar(plan: PlanResponse): void {
-    if (plan.numeroUsuariosActivos && plan.numeroUsuariosActivos > 0) {
-      this.notificationService.showError(
-        `No puedes eliminar este plan porque ${plan.numeroUsuariosActivos} usuario(s) lo tienen activo (RN14)`
-      );
-      return;
-    }
+    // Validar RN14: No eliminar si tiene usuarios activos
+    // Nota: El backend validará esto también
 
     const confirmado = confirm(
       `¿Estás seguro de eliminar el plan "${plan.nombre}"?\n\nEsta acción no se puede deshacer.`
@@ -421,12 +707,15 @@ export class ListaPlanesComponent implements OnInit {
     }
   }
 
-  formatearObjetivo(tipo: string): string {
+  formatearObjetivo(tipo: string | null): string {
+    if (!tipo) return 'Sin objetivo';
+    
     const objetivos: Record<string, string> = {
-      'PERDIDA_PESO': 'Pérdida de Peso',
-      'GANANCIA_MUSCULAR': 'Ganancia Muscular',
-      'MANTENIMIENTO': 'Mantenimiento',
-      'DEFINICION': 'Definición',
+      'PERDER_PESO': 'Pérdida de Peso',
+      'GANAR_MASA_MUSCULAR': 'Ganancia Muscular',
+      'MANTENER_FORMA': 'Mantenimiento',
+      'REHABILITACION': 'Rehabilitación',
+      'CONTROLAR_ESTRES': 'Control de Estrés',
       'SALUD_GENERAL': 'Salud General'
     };
     return objetivos[tipo] || tipo;

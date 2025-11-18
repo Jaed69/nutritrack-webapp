@@ -111,14 +111,7 @@ export class EditarPlanComponent implements OnInit {
           this.formulario = this.fb.group({
             nombre: [plan.nombre, Validators.required],
             descripcion: [plan.descripcion, Validators.required],
-            duracionDias: [plan.duracionDias, Validators.required],
-            objetivo: this.fb.group({
-              tipoObjetivo: [plan.objetivo.tipoObjetivo],
-              caloriasObjetivo: [plan.objetivo.caloriasObjetivo],
-              proteinasObjetivo: [plan.objetivo.proteinasObjetivo],
-              carbohidratosObjetivo: [plan.objetivo.carbohidratosObjetivo],
-              grasasObjetivo: [plan.objetivo.grasasObjetivo]
-            })
+            duracionDias: [plan.duracionDias, Validators.required]
           });
           this.cargando.set(false);
         }

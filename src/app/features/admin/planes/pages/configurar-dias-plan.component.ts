@@ -90,20 +90,21 @@ import { DiaPlanResponse, TipoComida } from '../../../../shared/models';
                 </div>
 
                 <div class="comidas-list">
-                  @for (comida of grupo.comidas; track comida.id) {
+                  @for (dia of grupo.comidas; track dia.id) {
                     <div class="comida-item">
                       <div class="comida-info">
-                        <span class="orden">{{ comida.orden }}.</span>
+                        <span class="orden">{{ grupo.comidas.indexOf(dia) + 1 }}.</span>
                         <div class="comida-details">
-                          <strong>{{ comida.nombreComida }}</strong>
+                          <strong>{{ dia.comida.nombre }}</strong>
                           <div class="comida-meta">
-                            <span class="badge">{{ formatearTipoComida(comida.tipoComida) }}</span>
-                            <span>{{ comida.porcionesRecomendadas }} porción(es)</span>
-                            <span>{{ comida.calorias }} kcal</span>
+                            <span class="badge">{{ formatearTipoComida(dia.tipoComida) }}</span>
+                            @if (dia.comida.calorias) {
+                              <span>{{ dia.comida.calorias }} kcal</span>
+                            }
                           </div>
                         </div>
                       </div>
-                      <button class="btn-delete" (click)="eliminarDia(comida.id)">
+                      <button class="btn-delete" (click)="eliminarDia(dia.id)">
                         Eliminar
                       </button>
                     </div>
@@ -222,7 +223,7 @@ export class ConfigurarDiasPlanComponent implements OnInit {
     const agrupados = Array.from(diasMap.entries())
       .map(([dia, comidas]) => ({
         dia,
-        comidas: comidas.sort((a, b) => a.orden - b.orden)
+        comidas: comidas
       }))
       .sort((a, b) => a.dia - b.dia);
 

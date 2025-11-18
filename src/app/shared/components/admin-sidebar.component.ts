@@ -187,6 +187,7 @@ interface NavItem {
       border-left: 3px solid transparent;
       font-size: 0.9375rem;
       font-weight: 500;
+      min-height: 44px;
     }
 
     .nav-item:hover {
@@ -209,6 +210,8 @@ interface NavItem {
 
     .nav-label {
       flex: 1;
+      line-height: 1.3;
+      word-break: break-word;
     }
 
     /* Logout Button */

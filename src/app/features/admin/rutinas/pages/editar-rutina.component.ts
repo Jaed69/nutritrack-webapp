@@ -111,8 +111,8 @@ export class EditarRutinaComponent implements OnInit {
             nombre: [rutina.nombre, Validators.required],
             descripcion: [rutina.descripcion, Validators.required],
             duracionSemanas: [rutina.duracionSemanas, Validators.required],
-            frecuenciaSemanal: [rutina.frecuenciaSemanal, Validators.required],
-            nivelDificultad: [rutina.nivelDificultad, Validators.required]
+            nivelDificultad: [rutina.nivelDificultad, Validators.required],
+            objetivo: [rutina.objetivo]
           });
           this.cargando.set(false);
         }

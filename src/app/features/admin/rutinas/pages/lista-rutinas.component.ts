@@ -2,6 +2,13 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatChipsModule } from '@angular/material/chips';
 import { RutinaService } from '../../services/rutina.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { RutinaResponse } from '../../../../shared/models';
@@ -13,60 +20,89 @@ import { RutinaResponse } from '../../../../shared/models';
 @Component({
   selector: 'app-lista-rutinas',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [
+    CommonModule,
+    RouterLink,
+    FormsModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatCheckboxModule,
+    MatChipsModule
+  ],
   template: `
-    <div class="rutinas-container">
-      <div class="header">
-        <h1>Gestión de Rutinas de Ejercicio</h1>
-        <button class="btn-primary" routerLink="/admin/rutinas/crear">
-          <i class="icon">+</i> Crear Rutina
+    <div class="page-container">
+      <div class="page-header">
+        <div class="header-content">
+          <h1 class="page-title">
+            <mat-icon>fitness_center</mat-icon>
+            Gestión de Rutinas de Ejercicio
+          </h1>
+          <p class="page-subtitle">Administra las rutinas de ejercicio del sistema</p>
+        </div>
+        <button mat-raised-button color="primary" routerLink="/admin/rutinas/crear">
+          <mat-icon>add</mat-icon>
+          Crear Rutina
         </button>
       </div>
 
-      <div class="filters">
-        <div class="search-box">
-          <input
-            type="text"
-            [(ngModel)]="filtroNombre"
-            (ngModelChange)="filtrarRutinas()"
-            placeholder="Buscar por nombre..."
-          />
-        </div>
-        <label class="checkbox-label">
-          <input
-            type="checkbox"
-            [(ngModel)]="mostrarInactivas"
-            (ngModelChange)="cargarRutinas()"
-          />
-          Mostrar rutinas inactivas
-        </label>
-      </div>
+      <mat-card class="filters-card">
+        <mat-card-content>
+          <div class="filters">
+            <mat-form-field class="search-field" appearance="outline">
+              <mat-label>Buscar rutinas</mat-label>
+              <input
+                matInput
+                [(ngModel)]="filtroNombre"
+                (ngModelChange)="filtrarRutinas()"
+                placeholder="Buscar por nombre..."
+              />
+              <mat-icon matPrefix>search</mat-icon>
+            </mat-form-field>
+            <mat-checkbox
+              [(ngModel)]="mostrarInactivas"
+              (ngModelChange)="cargarRutinas()"
+            >
+              Mostrar rutinas inactivas
+            </mat-checkbox>
+          </div>
+        </mat-card-content>
+      </mat-card>
 
       @if (loading()) {
         <div class="loading">Cargando rutinas...</div>
       }
 
       @if (!loading() && rutinasFiltradas().length === 0) {
-        <div class="empty-state">
-          <p>No hay rutinas registradas</p>
-          <button class="btn-primary" routerLink="/admin/rutinas/crear">
-            Crear la primera rutina
-          </button>
-        </div>
+        <mat-card>
+          <mat-card-content>
+            <div class="empty-state">
+              <mat-icon class="empty-icon">event_repeat</mat-icon>
+              <h3>No hay rutinas registradas</h3>
+              <p>Comienza creando tu primera rutina para el sistema</p>
+              <button mat-raised-button color="primary" routerLink="/admin/rutinas/crear">
+                <mat-icon>add</mat-icon>
+                Crear Primera Rutina
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
       }
 
       @if (!loading() && rutinasFiltradas().length > 0) {
         <div class="rutinas-grid">
           @for (rutina of rutinasFiltradas(); track rutina.id) {
-            <div class="rutina-card" [class.inactiva]="!rutina.activo">
+            <mat-card class="rutina-card" [class.inactiva]="!rutina.activo">
               <div class="rutina-header">
                 <h3>{{ rutina.nombre }}</h3>
-                <span class="badge" [class.badge-inactive]="!rutina.activo">
+                <span class="estado-badge" [class.activo]="rutina.activo" [class.inactivo]="!rutina.activo">
                   {{ rutina.activo ? 'Activa' : 'Inactiva' }}
                 </span>
               </div>
 
-              <p class="rutina-description">{{ rutina.descripcion }}</p>
+              <p class="rutina-descripcion">{{ rutina.descripcion }}</p>
 
               <div class="rutina-stats">
                 <div class="stat">
@@ -77,86 +113,103 @@ import { RutinaResponse } from '../../../../shared/models';
                   <span class="stat-label">Nivel:</span>
                   <span class="stat-value">{{ formatearNivel(rutina.nivelDificultad) }}</span>
                 </div>
-                <div class="stat">
-                  <span class="stat-label">Frecuencia:</span>
-                  <span class="stat-value">{{ rutina.frecuenciaSemanal }}x semana</span>
-                </div>
-                @if (rutina.numeroUsuariosActivos !== undefined && rutina.numeroUsuariosActivos > 0) {
-                  <div class="stat usuarios-activos">
-                    <span class="stat-label">Usuarios activos:</span>
-                    <span class="stat-value">{{ rutina.numeroUsuariosActivos }}</span>
+                @if (rutina.totalEjerciciosProgramados !== undefined) {
+                  <div class="stat">
+                    <span class="stat-label">Ejercicios:</span>
+                    <span class="stat-value">{{ rutina.totalEjerciciosProgramados }}</span>
                   </div>
                 }
               </div>
 
-              <div class="rutina-etiquetas">
+              <mat-chip-set class="rutina-etiquetas">
                 @for (etiqueta of rutina.etiquetas; track etiqueta.id) {
-                  <span class="etiqueta">{{ etiqueta.nombre }}</span>
+                  <mat-chip>{{ etiqueta.nombre }}</mat-chip>
                 }
-              </div>
+              </mat-chip-set>
 
               <div class="rutina-actions">
-                <button class="btn-secondary" [routerLink]="['/admin/rutinas', rutina.id, 'editar']">
+                <button mat-raised-button [routerLink]="['/admin/rutinas', rutina.id, 'editar']">
+                  <mat-icon>edit</mat-icon>
                   Editar
                 </button>
-                <button class="btn-secondary" [routerLink]="['/admin/rutinas', rutina.id, 'ejercicios']">
-                  Gestionar Ejercicios
+                <button mat-raised-button [routerLink]="['/admin/rutinas', rutina.id, 'ejercicios']">
+                  <mat-icon>list</mat-icon>
+                  Ejercicios
                 </button>
                 <button
-                  class="btn-danger"
+                  mat-raised-button
+                  color="warn"
                   (click)="confirmarEliminar(rutina)"
                   [disabled]="rutina.numeroUsuariosActivos && rutina.numeroUsuariosActivos > 0"
                 >
+                  <mat-icon>delete</mat-icon>
                   Eliminar
                 </button>
               </div>
-            </div>
+            </mat-card>
           }
         </div>
       }
     </div>
   `,
   styles: [`
-    .rutinas-container {
+    .page-container {
       padding: 2rem;
       max-width: 1400px;
       margin: 0 auto;
     }
 
-    .header {
+    .page-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 2rem;
+      gap: 2rem;
     }
 
-    h1 {
+    .header-content {
+      flex: 1;
+    }
+
+    .page-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 0 0 0.5rem 0;
       font-size: 2rem;
-      color: #2d3748;
+      color: #333;
+    }
+
+    .page-title mat-icon {
+      font-size: 2rem;
+      width: 2rem;
+      height: 2rem;
+      color: var(--primary-color, #00A859);
+    }
+
+    .page-subtitle {
       margin: 0;
+      color: #666;
+      font-size: 1rem;
+    }
+
+    .filters-card {
+      margin-bottom: 2rem;
     }
 
     .filters {
       display: flex;
-      gap: 1rem;
-      margin-bottom: 2rem;
+      gap: 1.5rem;
       align-items: center;
+      flex-wrap: wrap;
     }
 
-    .search-box {
+    .search-field {
       flex: 1;
-      max-width: 400px;
+      min-width: 300px;
     }
 
-    .search-box input {
-      width: 100%;
-      padding: 0.75rem;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: 1rem;
-    }
-
-    .checkbox-label {
+    mat-checkbox {
       display: flex;
       align-items: center;
       gap: 0.5rem;
@@ -170,21 +223,16 @@ import { RutinaResponse } from '../../../../shared/models';
     }
 
     .rutina-card {
-      background: white;
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       transition: transform 0.2s, box-shadow 0.2s;
     }
 
     .rutina-card:hover {
       transform: translateY(-4px);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
     }
 
     .rutina-card.inactiva {
-      opacity: 0.7;
-      background: #f7fafc;
+      opacity: 0.6;
     }
 
     .rutina-header {
@@ -197,147 +245,104 @@ import { RutinaResponse } from '../../../../shared/models';
     .rutina-header h3 {
       margin: 0;
       font-size: 1.25rem;
-      color: #2d3748;
+      color: #333;
       flex: 1;
     }
 
-    .badge {
+    .estado-badge {
       padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.875rem;
-      font-weight: 600;
-      background: #48bb78;
-      color: white;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 500;
     }
 
-    .badge-inactive {
-      background: #cbd5e0;
-      color: #4a5568;
+    .estado-badge.activo {
+      background: #d4edda;
+      color: #155724;
     }
 
-    .rutina-description {
-      color: #718096;
+    .estado-badge.inactivo {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .rutina-descripcion {
+      color: #666;
       margin-bottom: 1rem;
-      line-height: 1.5;
+      min-height: 3rem;
     }
 
     .rutina-stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
+      display: flex;
+      gap: 1rem;
       margin-bottom: 1rem;
-      padding: 1rem;
-      background: #f7fafc;
+      padding: 0.75rem;
+      background: #f8f9fa;
       border-radius: 8px;
     }
 
     .stat {
-      display: flex;
-      flex-direction: column;
+      flex: 1;
+      text-align: center;
     }
 
     .stat-label {
-      font-size: 0.875rem;
-      color: #718096;
+      display: block;
+      font-size: 0.85rem;
+      color: #666;
       margin-bottom: 0.25rem;
     }
 
     .stat-value {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #2d3748;
-    }
-
-    .usuarios-activos {
-      grid-column: 1 / -1;
-      background: #fed7d7;
-      padding: 0.5rem;
-      border-radius: 6px;
-    }
-
-    .usuarios-activos .stat-value {
-      color: #c53030;
+      display: block;
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #333;
     }
 
     .rutina-etiquetas {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
       margin-bottom: 1rem;
-    }
-
-    .etiqueta {
-      padding: 0.25rem 0.75rem;
-      background: #edf2f7;
-      color: #4a5568;
-      border-radius: 20px;
-      font-size: 0.875rem;
     }
 
     .rutina-actions {
       display: flex;
       gap: 0.5rem;
       flex-wrap: wrap;
+      margin-top: 1rem;
     }
 
-    .btn-primary, .btn-secondary, .btn-danger {
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 0.875rem;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-    }
-
-    .btn-secondary {
-      background: #edf2f7;
-      color: #4a5568;
+    .rutina-actions button {
       flex: 1;
+      min-width: 120px;
     }
 
-    .btn-secondary:hover {
-      background: #e2e8f0;
-    }
-
-    .btn-danger {
-      background: #fc8181;
-      color: white;
-    }
-
-    .btn-danger:hover:not(:disabled) {
-      background: #f56565;
-    }
-
-    .btn-danger:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .loading, .empty-state {
+    .loading {
       text-align: center;
       padding: 3rem;
-      color: #718096;
+      color: #666;
     }
 
-    .empty-state p {
-      font-size: 1.125rem;
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+    }
+
+    .empty-icon {
+      font-size: 4rem;
+      width: 4rem;
+      height: 4rem;
+      color: #ccc;
       margin-bottom: 1rem;
     }
 
-    .icon {
-      font-size: 1.25rem;
-      margin-right: 0.25rem;
+    .empty-state h3 {
+      margin: 0 0 0.5rem 0;
+      color: #333;
+    }
+
+    .empty-state p {
+      color: #666;
+      margin-bottom: 1.5rem;
     }
   `]
 })
@@ -359,11 +364,18 @@ export class ListaRutinasComponent implements OnInit {
 
   cargarRutinas(): void {
     this.loading.set(true);
-    this.rutinaService.obtenerRutinas(this.mostrarInactivas()).subscribe({
+    
+    // Si mostrarInactivas está activado, obtener todas las rutinas, sino solo activas
+    const observable = this.mostrarInactivas() 
+      ? this.rutinaService.obtenerRutinas()
+      : this.rutinaService.obtenerRutinasActivas();
+
+    observable.subscribe({
       next: (response) => {
         this.loading.set(false);
-        if (response.success) {
-          this.rutinasFiltradas.set(response.data || []);
+        if (response.success && response.data) {
+          // response.data ya es la estructura paginada, y el servicio actualiza _rutinas
+          this.rutinasFiltradas.set(this.rutinaService.rutinas());
         }
       },
       error: () => {
@@ -374,28 +386,32 @@ export class ListaRutinasComponent implements OnInit {
   }
 
   filtrarRutinas(): void {
-    const rutinas = this.rutinaService.rutinas();
-    const filtro = this.filtroNombre().toLowerCase();
+    const filtro = this.filtroNombre().trim();
     
     if (!filtro) {
-      this.rutinasFiltradas.set(rutinas);
+      this.cargarRutinas();
       return;
     }
 
-    const filtradas = rutinas.filter(rutina =>
-      rutina.nombre.toLowerCase().includes(filtro) ||
-      rutina.descripcion.toLowerCase().includes(filtro)
-    );
-    this.rutinasFiltradas.set(filtradas);
+    // Buscar por nombre usando el endpoint del API
+    this.loading.set(true);
+    this.rutinaService.buscarRutinas(filtro).subscribe({
+      next: (response) => {
+        this.loading.set(false);
+        if (response.success && response.data) {
+          this.rutinasFiltradas.set(this.rutinaService.rutinas());
+        }
+      },
+      error: () => {
+        this.loading.set(false);
+        this.notificationService.showError('Error al buscar rutinas');
+      }
+    });
   }
 
   confirmarEliminar(rutina: RutinaResponse): void {
-    if (rutina.numeroUsuariosActivos && rutina.numeroUsuariosActivos > 0) {
-      this.notificationService.showError(
-        `No puedes eliminar esta rutina porque ${rutina.numeroUsuariosActivos} usuario(s) la tienen activa (RN14)`
-      );
-      return;
-    }
+    // Validar RN14: No eliminar si tiene usuarios activos
+    // Nota: El backend validará esto también
 
     const confirmado = confirm(
       `¿Estás seguro de eliminar la rutina "${rutina.nombre}"?\n\nEsta acción no se puede deshacer.`
@@ -424,8 +440,22 @@ export class ListaRutinasComponent implements OnInit {
     const niveles: Record<string, string> = {
       'PRINCIPIANTE': 'Principiante',
       'INTERMEDIO': 'Intermedio',
-      'AVANZADO': 'Avanzado'
+      'AVANZADO': 'Avanzado',
+      'EXPERTO': 'Experto'
     };
     return niveles[nivel] || nivel;
+  }
+
+  formatearObjetivo(tipo: string | null): string {
+    if (!tipo) return 'Sin objetivo';
+    
+    const objetivos: Record<string, string> = {
+      'PERDER_PESO': 'Pérdida de Peso',
+      'GANAR_MASA_MUSCULAR': 'Ganancia Muscular',
+      'MANTENER_FORMA': 'Mantenimiento',
+      'REHABILITACION': 'Rehabilitación',
+      'CONTROLAR_ESTRES': 'Control de Estrés'
+    };
+    return objetivos[tipo] || tipo;
   }
 }

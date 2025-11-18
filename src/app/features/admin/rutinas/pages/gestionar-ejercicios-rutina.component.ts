@@ -4,7 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RutinaService } from '../../services/rutina.service';
 import { NotificationService } from '../../../../core/services/notification.service';
-import { EjercicioRutinaResponse, DiaSemana } from '../../../../shared/models';
+import { EjercicioRutinaResponse } from '../../../../shared/models';
 
 /**
  * Gestionar Ejercicios de Rutina (US-15)
@@ -112,7 +112,7 @@ import { EjercicioRutinaResponse, DiaSemana } from '../../../../shared/models';
                       <div class="ejercicio-info">
                         <span class="orden">{{ ejercicio.orden }}.</span>
                         <div class="ejercicio-details">
-                          <strong>{{ ejercicio.nombreEjercicio }}</strong>
+                          <strong>{{ ejercicio.ejercicio.nombre }}</strong>
                           <div class="ejercicio-meta">
                             <span>{{ ejercicio.series }} series × {{ ejercicio.repeticiones }} reps</span>
                             @if (ejercicio.peso) {
@@ -121,8 +121,8 @@ import { EjercicioRutinaResponse, DiaSemana } from '../../../../shared/models';
                             @if (ejercicio.duracionMinutos) {
                               <span>{{ ejercicio.duracionMinutos }} min</span>
                             }
-                            @if (ejercicio.tiempoDescanso) {
-                              <span>Descanso: {{ ejercicio.tiempoDescanso }}s</span>
+                            @if (ejercicio.descansoSegundos) {
+                              <span>Descanso: {{ ejercicio.descansoSegundos }}s</span>
                             }
                           </div>
                           @if (ejercicio.notas) {
@@ -239,22 +239,12 @@ export class GestionarEjerciciosRutinaComponent implements OnInit {
   }
 
   agruparEjercicios(): void {
-    const diasMap = new Map<string, EjercicioRutinaResponse[]>();
-    const diasOrden = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'];
-    
-    this.ejercicios().forEach(ejercicio => {
-      if (!diasMap.has(ejercicio.diaSemana)) {
-        diasMap.set(ejercicio.diaSemana, []);
-      }
-      diasMap.get(ejercicio.diaSemana)!.push(ejercicio);
-    });
-
-    const agrupados = diasOrden
-      .filter(dia => diasMap.has(dia))
-      .map(dia => ({
-        dia: this.formatearDia(dia),
-        ejercicios: diasMap.get(dia)!.sort((a, b) => a.orden - b.orden)
-      }));
+    // Como la API no devuelve diaSemana, simplemente mostramos todos los ejercicios
+    // en un solo grupo ordenados por orden
+    const agrupados = [{
+      dia: 'Ejercicios de la rutina',
+      ejercicios: [...this.ejercicios()].sort((a, b) => a.orden - b.orden)
+    }];
 
     this.ejerciciosAgrupados.set(agrupados);
   }

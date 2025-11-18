@@ -3,12 +3,17 @@
  * Backend: /api/v1/admin/planes
  */
 
+import { Etiqueta, PagedResponse } from './common.model';
+
+// Re-exportar para compatibilidad
+export type { Etiqueta, PagedResponse };
+
 export enum TipoObjetivo {
-  PERDIDA_PESO = 'PERDIDA_PESO',
-  GANANCIA_MUSCULAR = 'GANANCIA_MUSCULAR',
-  MANTENIMIENTO = 'MANTENIMIENTO',
-  DEFINICION = 'DEFINICION',
-  SALUD_GENERAL = 'SALUD_GENERAL'
+  PERDER_PESO = 'PERDER_PESO',
+  GANAR_MASA_MUSCULAR = 'GANAR_MASA_MUSCULAR',
+  MANTENER_FORMA = 'MANTENER_FORMA',
+  REHABILITACION = 'REHABILITACION',
+  CONTROLAR_ESTRES = 'CONTROLAR_ESTRES'
 }
 
 export enum TipoComida {
@@ -16,32 +21,33 @@ export enum TipoComida {
   ALMUERZO = 'ALMUERZO',
   CENA = 'CENA',
   SNACK = 'SNACK',
+  PRE_ENTRENAMIENTO = 'PRE_ENTRENAMIENTO',
+  POST_ENTRENAMIENTO = 'POST_ENTRENAMIENTO',
+  COLACION = 'COLACION',
   MERIENDA = 'MERIENDA'
 }
 
-export interface ObjetivoPlan {
-  caloriasObjetivo: number;
-  proteinasObjetivo: number;
-  carbohidratosObjetivo: number;
-  grasasObjetivo: number;
-  tipoObjetivo: TipoObjetivo;
+export interface ObjetivoNutricional {
+  objetivo: TipoObjetivo;
+  proteinas: number;
+  carbohidratos: number;
+  grasas: number;
 }
 
 export interface CrearPlanRequest {
   nombre: string;
   descripcion: string;
   duracionDias: number;
-  objetivo: ObjetivoPlan;
-  etiquetaIds: number[];
+  caloriasTotales: number;
+  objetivos: ObjetivoNutricional[];
 }
 
 export interface ActualizarPlanRequest {
   nombre?: string;
   descripcion?: string;
   duracionDias?: number;
-  objetivo?: ObjetivoPlan;
-  etiquetaIds?: number[];
-  activo?: boolean;
+  caloriasTotales?: number;
+  objetivos?: ObjetivoNutricional[];
 }
 
 export interface PlanResponse {
@@ -49,48 +55,44 @@ export interface PlanResponse {
   nombre: string;
   descripcion: string;
   duracionDias: number;
-  objetivo: ObjetivoPlan;
-  etiquetas: Array<{
-    id: number;
-    nombre: string;
-    tipo: string;
-  }>;
   activo: boolean;
-  fechaCreacion: string;
-  fechaActualizacion: string;
+  objetivo: TipoObjetivo | null;
+  etiquetas: Etiqueta[];
+  createdAt: string | null;
+  updatedAt: string | null;
+  totalDiasProgramados?: number;
   numeroUsuariosActivos?: number;
+  dias?: DiaPlanResponse[];
 }
 
 export interface DiaPlanRequest {
   numeroDia: number;
-  comidaId: number;
   tipoComida: TipoComida;
-  porcionesRecomendadas: number;
-  orden: number;
+  idComida: number;
+  notas?: string;
+}
+
+export interface ComidaInfo {
+  id: number;
+  nombre: string;
+  tipo: string;
+  tiempoPreparacion: number;
+  calorias?: number;
 }
 
 export interface DiaPlanResponse {
   id: number;
   numeroDia: number;
-  comidaId: number;
-  nombreComida: string;
   tipoComida: TipoComida;
-  porcionesRecomendadas: number;
-  orden: number;
-  calorias: number;
-  proteinas: number;
-  carbohidratos: number;
-  grasas: number;
+  comida: ComidaInfo;
+  notas?: string;
+  // Propiedades para compatibilidad con componentes (extraídas de comida)
+  orden?: number;
+  nombreComida?: string;
+  porcionesRecomendadas?: number;
+  calorias?: number;
 }
 
 export interface PlanDetalleResponse extends PlanResponse {
   dias: DiaPlanResponse[];
-  totalesPorDia: {
-    [dia: number]: {
-      calorias: number;
-      proteinas: number;
-      carbohidratos: number;
-      grasas: number;
-    };
-  };
 }
