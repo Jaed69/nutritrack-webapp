@@ -32,7 +32,7 @@ export class MetasService {
    */
   obtenerTodosLosPlanesDeUsuario(): Observable<ApiResponse<any[]>> {
     return this.http.get<ApiResponse<any[]>>(
-      `${this.usuarioUrl}/planes`
+      `planes/catalogo`
     );
   }
 
@@ -52,7 +52,7 @@ export class MetasService {
    */
   obtenerTodasLasRutinasDeUsuario(): Observable<ApiResponse<any[]>> {
     return this.http.get<ApiResponse<any[]>>(
-      `${this.usuarioUrl}/rutinas`
+      `rutinas/catalogo`
     );
   }
 

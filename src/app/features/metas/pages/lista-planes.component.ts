@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MetasService } from "../../../core/services/metas.service";
+import { CatalogoService} from "../../../core/services/catalogo.service";
 import { NotificationService } from "../../../core/services/notification.service";
 
 @Component({
@@ -12,8 +13,11 @@ import { NotificationService } from "../../../core/services/notification.service
   template: `
     <div class="catalogo-planes-container">
       <div class="header">
-        <h1>Planes Nutricionales Disponibles</h1>
-        <p class="subtitle">Explora nuestros planes y activa el que mejor se ajuste a tus objetivos</p>
+        <button class="btn-back" [routerLink]="['/metas/mis-asignaciones']">
+          ← Volver a Mis Asignaciones
+        </button>
+        <h1>Catálogo de Planes Nutricionales</h1>
+        <p class="subtitle">Explora planes disponibles según tu perfil y objetivos</p>
       </div>
 
       <div class="filters">
@@ -35,6 +39,16 @@ import { NotificationService } from "../../../core/services/notification.service
             <option value="SALUD_GENERAL">Salud General</option>
           </select>
         </div>
+        <div class="filter-sugeridos">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [(ngModel)]="soloSugeridos"
+              (ngModelChange)="cargarPlanes()"
+            />
+            <span>Solo planes sugeridos para mi objetivo</span>
+          </label>
+        </div>
       </div>
 
       @if (loading()) {
@@ -45,17 +59,22 @@ import { NotificationService } from "../../../core/services/notification.service
 
       @if (!loading() && planesFiltrados().length === 0) {
         <div class="empty-state">
-          <p>No hay planes disponibles en este momento</p>
+          <p>No se encontraron planes disponibles con los filtros seleccionados</p>
+          @if (soloSugeridos) {
+            <p class="hint">Intenta desactivar el filtro de planes sugeridos</p>
+          }
         </div>
       }
 
       @if (!loading() && planesFiltrados().length > 0) {
         <div class="planes-grid">
           @for (plan of planesFiltrados(); track plan.id) {
-            <div class="plan-card">
+            <div class="plan-card" [class.plan-sugerido]="plan.sugerido">
               <div class="plan-header">
                 <h3>{{ plan.nombre }}</h3>
-                <span class="badge-active">Disponible</span>
+                @if (plan.sugerido) {
+                  <span class="badge-sugerido">✨ Sugerido</span>
+                }
               </div>
 
               <p class="plan-description">{{ plan.descripcion }}</p>
@@ -65,35 +84,45 @@ import { NotificationService } from "../../../core/services/notification.service
                   <span class="stat-label">Duración:</span>
                   <span class="stat-value">{{ plan.duracionDias }} días</span>
                 </div>
-                <div class="stat">
-                  <span class="stat-label">Objetivo:</span>
-                  <span class="stat-value">{{ formatearObjetivo(plan.objetivo.tipoObjetivo) }}</span>
-                </div>
-                <div class="stat">
-                  <span class="stat-label">Calorías:</span>
-                  <span class="stat-value">{{ plan.objetivo.caloriasObjetivo }} kcal</span>
-                </div>
-              </div>
-
-              <div class="plan-etiquetas">
-                @for (etiqueta of plan.etiquetas; track etiqueta.id) {
-                  <span class="etiqueta">{{ etiqueta.nombre }}</span>
+                @if (plan.objetivo) {
+                  <div class="stat">
+                    <span class="stat-label">Objetivo:</span>
+                    <span class="stat-value">{{ formatearObjetivo(plan.objetivo.tipoObjetivo) }}</span>
+                  </div>
+                  <div class="stat">
+                    <span class="stat-label">Calorías:</span>
+                    <span class="stat-value">{{ plan.objetivo.caloriasObjetivo }} kcal</span>
+                  </div>
+                } @else {
+                  <div class="stat">
+                    <span class="stat-label">Objetivo:</span>
+                    <span class="stat-value text-muted">No especificado</span>
+                  </div>
                 }
               </div>
+
+              @if (plan.etiquetas && plan.etiquetas.length > 0) {
+                <div class="plan-etiquetas">
+                  @for (etiqueta of plan.etiquetas; track etiqueta.id) {
+                    <span class="etiqueta">{{ etiqueta.nombre }}</span>
+                  }
+                </div>
+              }
 
               <div class="plan-actions">
                 <button
                   class="btn-primary"
-                  [routerLink]="['/catalogo/planes', plan.id]"
+                  [routerLink]="['/metas/planes', plan.id]"
                 >
                   Ver Detalles
                 </button>
+                
                 <button
-                  class="btn-secondary"
+                  class="btn-activate"
                   (click)="activarPlan(plan)"
-                  [disabled]="plan.activoParaUsuario"
+                  [disabled]="activandoPlan() === plan.id"
                 >
-                  {{ plan.activoParaUsuario ? 'Activado' : 'Activar' }}
+                  {{ activandoPlan() === plan.id ? 'Activando...' : 'Activar Plan' }}
                 </button>
               </div>
             </div>
@@ -112,6 +141,27 @@ import { NotificationService } from "../../../core/services/notification.service
     .header {
       margin-bottom: 2rem;
       text-align: center;
+      position: relative;
+    }
+
+    .btn-back {
+      position: absolute;
+      left: 0;
+      top: 0;
+      padding: 0.625rem 1.25rem;
+      background: #edf2f7;
+      color: #4a5568;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+
+    .btn-back:hover {
+      background: #e2e8f0;
+      transform: translateX(-2px);
     }
 
     h1 {
@@ -160,6 +210,26 @@ import { NotificationService } from "../../../core/services/notification.service
       background-color: white;
     }
 
+    .filter-sugeridos {
+      display: flex;
+      align-items: center;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      font-size: 0.95rem;
+      color: #4a5568;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
     .planes-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -174,11 +244,17 @@ import { NotificationService } from "../../../core/services/notification.service
       transition: transform 0.2s, box-shadow 0.2s;
       display: flex;
       flex-direction: column;
+      border: 2px solid transparent;
     }
 
     .plan-card:hover {
       transform: translateY(-4px);
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .plan-card.plan-sugerido {
+      border-color: #f6ad55;
+      background: linear-gradient(to bottom, #fffaf0, white);
     }
 
     .plan-header {
@@ -196,12 +272,12 @@ import { NotificationService } from "../../../core/services/notification.service
       flex: 1;
     }
 
-    .badge-active {
+    .badge-sugerido {
       padding: 0.25rem 0.75rem;
       border-radius: 20px;
-      font-size: 0.875rem;
+      font-size: 0.75rem;
       font-weight: 600;
-      background: #48bb78;
+      background: linear-gradient(135deg, #f6ad55, #ed8936);
       color: white;
       white-space: nowrap;
     }
@@ -210,7 +286,6 @@ import { NotificationService } from "../../../core/services/notification.service
       color: #718096;
       margin-bottom: 1rem;
       line-height: 1.5;
-      flex: 1;
     }
 
     .plan-stats {
@@ -240,6 +315,11 @@ import { NotificationService } from "../../../core/services/notification.service
       color: #2d3748;
     }
 
+    .stat-value.text-muted {
+      color: #a0aec0;
+      font-style: italic;
+    }
+
     .plan-etiquetas {
       display: flex;
       flex-wrap: wrap;
@@ -257,13 +337,13 @@ import { NotificationService } from "../../../core/services/notification.service
 
     .plan-actions {
       display: flex;
-      gap: 0.75rem;
+      gap: 0.5rem;
       flex-wrap: wrap;
       margin-top: auto;
     }
 
-    .btn-primary, .btn-secondary {
-      padding: 0.75rem 1rem;
+    .btn-primary, .btn-activate {
+      padding: 0.625rem 1rem;
       border: none;
       border-radius: 8px;
       font-weight: 600;
@@ -284,20 +364,20 @@ import { NotificationService } from "../../../core/services/notification.service
       box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     }
 
-    .btn-secondary {
-      background: #edf2f7;
-      color: #4a5568;
+    .btn-activate {
+      background: #48bb78;
+      color: white;
     }
 
-    .btn-secondary:hover:not(:disabled) {
-      background: #e2e8f0;
+    .btn-activate:hover:not(:disabled) {
+      background: #38a169;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
     }
 
-    .btn-secondary:disabled {
+    .btn-activate:disabled {
       opacity: 0.6;
       cursor: not-allowed;
-      background: #cbd5e0;
-      color: #2d3748;
     }
 
     .loading, .empty-state {
@@ -309,16 +389,25 @@ import { NotificationService } from "../../../core/services/notification.service
     .empty-state p {
       font-size: 1.125rem;
     }
+
+    .empty-state .hint {
+      font-size: 0.95rem;
+      color: #a0aec0;
+      margin-top: 0.5rem;
+    }
   `]
 })
 export class MetasListaPlanesComponent implements OnInit {
   loading = signal(false);
+  activandoPlan = signal<number | null>(null);
   filtroNombre = '';
   filtroObjetivo = '';
+  soloSugeridos = false;
   planes = signal<any[]>([]);
   planesFiltrados = signal<any[]>([]);
 
   constructor(
+    private readonly catalogoService: CatalogoService,
     private readonly metasService: MetasService,
     private readonly notificationService: NotificationService
   ) {}
@@ -327,22 +416,25 @@ export class MetasListaPlanesComponent implements OnInit {
     this.cargarPlanes();
   }
 
-    cargarPlanes(): void {
-      this.loading.set(true);
-      this.metasService.obtenerTodosLosPlanesDeUsuario().subscribe({
-        next: (response: any) => {
-          this.loading.set(false);
-          if (response.success) {
-            this.planes.set(response.data || []);
-            this.filtrarPlanes();
-          }
-        },
-        error: () => {
-          this.loading.set(false);
-          this.notificationService.showError('Error al cargar los planes');
+  cargarPlanes(): void {
+    this.loading.set(true);
+    this.catalogoService.verCatalogo(this.soloSugeridos).subscribe({
+      next: (response: any) => {
+        this.loading.set(false);
+        if (response.success) {
+          const data = response.data?.content || response.data || [];
+          this.planes.set(data);
+          this.filtrarPlanes();
         }
-      });
-    }
+      },
+      error: (error) => {
+        this.loading.set(false);
+        this.notificationService.showError(
+          error.error?.message || 'Error al cargar el catálogo de planes'
+        );
+      }
+    });
+  }
 
   filtrarPlanes(): void {
     let filtrados = this.planes();
@@ -358,7 +450,7 @@ export class MetasListaPlanesComponent implements OnInit {
 
     if (this.filtroObjetivo) {
       filtrados = filtrados.filter(
-        (plan) => plan.objetivo.tipoObjetivo === this.filtroObjetivo
+        (plan) => plan.objetivo?.tipoObjetivo === this.filtroObjetivo
       );
     }
 
@@ -366,16 +458,18 @@ export class MetasListaPlanesComponent implements OnInit {
   }
 
   activarPlan(plan: any): void {
+    this.activandoPlan.set(plan.id);
     this.metasService.activarPlan({ planId: plan.id }).subscribe({
       next: (response: any) => {
+        this.activandoPlan.set(null);
         if (response.success) {
           this.notificationService.showSuccess(
             `Plan "${plan.nombre}" activado exitosamente`
           );
-          this.cargarPlanes();
         }
       },
       error: (error: any) => {
+        this.activandoPlan.set(null);
         this.notificationService.showError(
           error.error?.message || 'Error al activar el plan'
         );

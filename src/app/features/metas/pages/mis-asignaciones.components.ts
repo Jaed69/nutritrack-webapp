@@ -24,12 +24,17 @@ import { NotificationService } from "../../../core/services/notification.service
       @if (!loading()) {
         <!-- Planes Activos -->
         <section class="planes-section">
-          <h2>Planes Nutricionales Activos</h2>
+          <div class="section-header">
+            <h2>Planes Nutricionales Activos</h2>
+            <button class="btn-view-all" [routerLink]="['/metas/planes']">
+              Ver todos los planes
+            </button>
+          </div>
 
           @if (planesActivos().length === 0) {
             <div class="empty-state">
               <p>No tienes planes activos</p>
-              <button class="btn-link" [routerLink]="['/catalogo/planes']">
+              <button class="btn-link" [routerLink]="['/metas/planes']">
                 Explorar planes disponibles
               </button>
             </div>
@@ -106,12 +111,17 @@ import { NotificationService } from "../../../core/services/notification.service
 
         <!-- Rutinas Activas -->
         <section class="rutinas-section">
-          <h2>Rutinas Activas</h2>
+          <div class="section-header">
+            <h2>Rutinas Activas</h2>
+            <button class="btn-view-all" [routerLink]="['/metas/rutinas']">
+              Ver todas las rutinas
+            </button>
+          </div>
 
           @if (rutinasActivas().length === 0) {
             <div class="empty-state">
               <p>No tienes rutinas activas</p>
-              <button class="btn-link" [routerLink]="['/catalogo/rutinas']">
+              <button class="btn-link" [routerLink]="['/metas/rutinas']">
                 Explorar rutinas disponibles
               </button>
             </div>
@@ -216,10 +226,38 @@ import { NotificationService } from "../../../core/services/notification.service
       margin-bottom: 3rem;
     }
 
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
     section h2 {
       color: #2d3748;
-      margin-bottom: 1.5rem;
+      margin: 0;
       font-size: 1.5rem;
+    }
+
+    .btn-view-all {
+      padding: 0.625rem 1.25rem;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-view-all:hover {
+      background: #764ba2;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
     }
 
     .asignaciones-grid {
