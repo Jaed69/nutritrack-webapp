@@ -73,14 +73,6 @@ import { UserResponse } from '../../../core/models/user.model';
           <div class="content-card">
             <div class="card-header">
               <h3>Alergias y Condiciones Médicas</h3>
-              @if (cambiosPendientes.etiquetas) {
-                <button
-                  class="btn-primary"
-                  (click)="guardarInlineEtiquetas()"
-                >
-                  Guardar Etiquetas
-                </button>
-              }
             </div>
 
             <div class="card-content">
@@ -105,7 +97,7 @@ import { UserResponse } from '../../../core/models/user.model';
                   }
                 </div>
 
-                <!-- CONDICIONES MEDICAS -->
+                <!-- CONDICIONES MÉDICAS -->
                 <div class="tag-column">
                   <h4>Condiciones Médicas</h4>
                   @if (condiciones().length > 0) {
@@ -125,10 +117,20 @@ import { UserResponse } from '../../../core/models/user.model';
                   }
                 </div>
               </div>
+
+              @if (cambiosPendientes.etiquetas) {
+                <button
+                  class="btn-primary"
+                  style="margin-top: 1rem"
+                  (click)="guardarInlineEtiquetas()"
+                >
+                  Guardar Etiquetas
+                </button>
+              }
             </div>
           </div>
 
-          <!-- HISTORIAL DE MEDIDAS (TAL COMO LO TENÍAS) -->
+          <!-- HISTORIAL DE MEDIDAS -->
           <div class="content-card">
             <div class="card-header">
               <h3>Historial de Medidas</h3>
@@ -147,10 +149,7 @@ import { UserResponse } from '../../../core/models/user.model';
                         </div>
                         <div class="medida-datos">
                           <span><strong>Peso:</strong> {{ medida.peso }} kg</span>
-                          <span
-                            ><strong>Altura:</strong> {{ medida.altura }}
-                            cm</span
-                          >
+                          <span><strong>Altura:</strong> {{ medida.altura }} cm</span>
                           @if (medida.imc) {
                             <span
                               ><strong>IMC:</strong>
@@ -207,6 +206,15 @@ import { UserResponse } from '../../../core/models/user.model';
                   <p>{{ currentUser()?.role || 'Usuario' }}</p>
                 </div>
               </div>
+
+              <div class="separator"></div>
+
+              <button
+                class="btn-danger delete-account-btn"
+                (click)="abrirConfirmacionEliminarUsuario()"
+              >
+                Eliminar Cuenta
+              </button>
             </div>
           </div>
         </div>
@@ -264,10 +272,7 @@ import { UserResponse } from '../../../core/models/user.model';
       <!-- MODAL CONFIRMAR ELIMINAR MEDIDA -->
       @if (mostrarConfirmacionEliminarMedida) {
         <div class="modal-overlay" (click)="cerrarConfirmacionEliminarMedida()">
-          <div
-            class="modal-content modal-small"
-            (click)="$event.stopPropagation()"
-          >
+          <div class="modal-content modal-small" (click)="$event.stopPropagation()">
             <div class="modal-header">
               <h3>Confirmar Eliminación</h3>
               <button
@@ -285,12 +290,8 @@ import { UserResponse } from '../../../core/models/user.model';
                     <strong>Fecha:</strong>
                     {{ MedidaAEliminar.fechaMedicion | date: 'dd/MM/yyyy' }}
                   </p>
-                  <p>
-                    <strong>Peso:</strong> {{ MedidaAEliminar.peso }} kg
-                  </p>
-                  <p>
-                    <strong>Altura:</strong> {{ MedidaAEliminar.altura }} cm
-                  </p>
+                  <p><strong>Peso:</strong> {{ MedidaAEliminar.peso }} kg</p>
+                  <p><strong>Altura:</strong> {{ MedidaAEliminar.altura }} cm</p>
                 </div>
               }
             </div>
@@ -307,6 +308,44 @@ import { UserResponse } from '../../../core/models/user.model';
                 [disabled]="eliminandoMedida"
               >
                 {{ eliminandoMedida ? 'Eliminando...' : 'Eliminar' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- MODAL CONFIRMAR ELIMINAR USUARIO -->
+      @if (mostrarConfirmacionEliminarUsuario) {
+        <div class="modal-overlay" (click)="cerrarConfirmacionEliminarUsuario()">
+          <div class="modal-content modal-small" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h3>Eliminar Cuenta</h3>
+              <button
+                class="btn-close"
+                (click)="cerrarConfirmacionEliminarUsuario()"
+              >
+                ✕
+              </button>
+            </div>
+            <div class="modal-body">
+              <p>
+                ¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se
+                puede deshacer.
+              </p>
+            </div>
+            <div class="modal-footer">
+              <button
+                class="btn-secondary"
+                (click)="cerrarConfirmacionEliminarUsuario()"
+              >
+                Cancelar
+              </button>
+              <button
+                class="btn-danger"
+                (click)="eliminarUsuario()"
+                [disabled]="eliminandoUsuario"
+              >
+                {{ eliminandoUsuario ? 'Eliminando...' : 'Eliminar Cuenta' }}
               </button>
             </div>
           </div>
@@ -594,6 +633,17 @@ import { UserResponse } from '../../../core/models/user.model';
       box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
     }
 
+    .delete-account-btn {
+      margin-top: 1rem;
+    }
+
+    .separator {
+      height: 1px;
+      width: 100%;
+      background-color: #e2e8f0;
+      margin: 1.5rem 0 1rem 0;
+    }
+
     /* Modales */
     .modal-overlay {
       position: fixed;
@@ -688,7 +738,7 @@ import { UserResponse } from '../../../core/models/user.model';
       background: none;
     }
 
-    /* Info de usuario */
+    /* Información de Usuario */
     .info-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -751,6 +801,7 @@ export class MiPerfilComponent implements OnInit {
   private notificationService = inject(NotificationService);
   private authService = inject(AuthService);
   private etiquetaService = inject(EtiquetaService);
+  
 
   // signals
   cargando = signal(true);
@@ -789,6 +840,10 @@ export class MiPerfilComponent implements OnInit {
     altura: null as number | null,
     fechaMedicion: ''
   };
+
+  // eliminar usuario
+  mostrarConfirmacionEliminarUsuario = false;
+  eliminandoUsuario = false;
 
   ngOnInit(): void {
     this.cargarUsuario();
@@ -1015,7 +1070,6 @@ export class MiPerfilComponent implements OnInit {
     };
 
     if (this.medidaEditando) {
-      // actualizar
       this.perfilService
         .actualizarMedicion(this.medidaEditando.id, medidaRequest)
         .subscribe({
@@ -1044,7 +1098,6 @@ export class MiPerfilComponent implements OnInit {
           }
         });
     } else {
-      // crear
       this.perfilService.registrarMedicion(medidaRequest).subscribe({
         next: (response) => {
           if (response.success && response.data) {
@@ -1114,4 +1167,41 @@ export class MiPerfilComponent implements OnInit {
       }
     });
   }
+
+  /* -------- ELIMINAR USUARIO -------- */
+
+  abrirConfirmacionEliminarUsuario(): void {
+    this.mostrarConfirmacionEliminarUsuario = true;
+  }
+
+  cerrarConfirmacionEliminarUsuario(): void {
+    this.mostrarConfirmacionEliminarUsuario = false;
+  }
+
+  eliminarUsuario(): void {
+  if (this.eliminandoUsuario) return;
+
+  this.eliminandoUsuario = true;
+
+  this.authService.eliminarCuenta().subscribe({
+      next: (res) => {
+        this.notificationService.success(
+          "Cuenta eliminada",
+          res?.message || "Tu cuenta ha sido eliminada exitosamente"
+        );
+
+        this.mostrarConfirmacionEliminarUsuario = false;
+        this.eliminandoUsuario = false;
+      },
+      error: (err) => {
+        this.notificationService.error(
+          "Error",
+          err.error?.message || "No se pudo eliminar la cuenta"
+        );
+
+        this.eliminandoUsuario = false;
+      }
+    });
+  }
+
 }
