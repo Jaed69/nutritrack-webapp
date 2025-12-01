@@ -138,6 +138,13 @@ export class NotificationService {
   }
 
   /**
+   * Alias simple para mostrar info con solo mensaje
+   */
+  showInfo(message: string, duration: number = 5000): void {
+    this.info('Información', message, duration);
+  }
+
+  /**
    * Método privado para mostrar notificaciones
    */
   private show(type: Notification['type'], title: string, message: string, duration: number) {

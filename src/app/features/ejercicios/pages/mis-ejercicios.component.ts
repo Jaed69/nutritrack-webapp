@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MetasService } from '../../../core/services/metas.service';
@@ -618,7 +618,7 @@ export class MisEjerciciosComponent implements OnInit {
 
     // Ejercicios programados de la rutina activa
     ejerciciosProgramados = signal<any[]>([]);
-    rutinaActiva: any;
+    rutinaActiva = signal<any>(null);
 
     progresoSemanal = signal([
         { dia: 'L', calorias: 0 },
@@ -636,11 +636,7 @@ export class MisEjerciciosComponent implements OnInit {
         private metasService: MetasService,
         private notificationService: NotificationService,
         private mockData: MockDataService
-    ) {
-        // Usar datos compartidos del mockData
-        this.ejerciciosProgramados = this.mockData.ejerciciosProgramados;
-        this.rutinaActiva = computed(() => this.mockData.rutinaActiva());
-    }
+    ) {}
 
     ngOnInit(): void {
         this.cargarEjerciciosProgramados();
@@ -649,27 +645,41 @@ export class MisEjerciciosComponent implements OnInit {
 
     cargarEjerciciosProgramados(): void {
         this.cargando.set(true);
+        console.log('🏋️ [MisEjercicios] Cargando ejercicios programados para hoy...');
         
-        // Intentar cargar desde API (opcional), pero usar datos del mockData siempre
         this.metasService.obtenerEjerciciosProgramadosHoy().subscribe({
           next: (response) => {
-            if (response.success && response.data) {
-              // Si hay datos de API, actualizar mockData
+            this.cargando.set(false);
+            console.log('📦 [MisEjercicios] Respuesta del servicio:', response);
+            
+            if (response.success && response.data && response.data.length > 0) {
+              // Hay datos de API, usarlos
               const ejerciciosConEstado = response.data.map(ejercicio => ({
                 ...ejercicio,
                 completado: false
               }));
+              console.log('✅ [MisEjercicios] Ejercicios encontrados:', ejerciciosConEstado.length);
+              ejerciciosConEstado.forEach((ej, idx) => {
+                console.log(`   ${idx + 1}. ${ej.ejercicioNombre || ej.ejercicio?.nombre} - Semana ${ej.semanaBase}, Día ${ej.diaSemana}`);
+              });
               this.ejerciciosProgramados.set(ejerciciosConEstado);
+              this.actualizarEstadisticas();
+            } else {
+              // No hay ejercicios programados para hoy (puede ser día de descanso)
+              console.log('⚠️ [MisEjercicios] No hay ejercicios para hoy:', response.message);
+              this.ejerciciosProgramados.set([]);
+              this.actualizarEstadisticas();
+              if (response.message) {
+                console.log('ℹ️', response.message);
+              }
             }
-            // Ya tenemos datos del mockData compartido
-            this.actualizarEstadisticas();
-            this.cargando.set(false);
           },
-          error: () => {
-            // Modo demo: ya tenemos datos del mockData compartido, no hacer nada
-            this.actualizarEstadisticas();
-            this.notificationService.showSuccess('Modo demo: ejercicios cargados sin conexión');
+          error: (err) => {
             this.cargando.set(false);
+            console.error('❌ [MisEjercicios] Error cargando ejercicios:', err);
+            // Fallback a datos mock si hay error de conexión
+            this.actualizarEstadisticas();
+            this.notificationService.showWarning('Sin conexión. Usando datos de ejemplo.');
           }
         });
     }
@@ -678,16 +688,21 @@ export class MisEjerciciosComponent implements OnInit {
         this.metasService.obtenerRutinasActivas().subscribe({
             next: (response) => {
                 if (response.success && response.data && response.data.length > 0) {
-                    const rutina = response.data[0];
+                    const rutinaData = response.data[0];
+                    // Puede venir como rutina anidada o directamente
+                    const rutina = rutinaData.rutina || rutinaData;
                     this.rutinaActiva.set({
-                        nombre: rutina.rutinaNombre || 'Rutina de Ejercicios',
-                        descripcion: rutina.rutinaDescripcion || '',
-                        duracion: rutina.semanasPatron || 0,
-                        semanaActual: rutina.semanaActual || 0,
-                        frecuencia: rutina.frecuenciaSemanal || 0,
-                        objetivo: rutina.objetivo || '',
-                        programacion: []
+                        id: rutinaData.id,
+                        rutinaId: rutina.id || rutinaData.rutinaId,
+                        nombre: rutina.nombre || rutinaData.rutinaNombre || 'Rutina de Ejercicios',
+                        descripcion: rutina.descripcion || rutinaData.rutinaDescripcion || '',
+                        duracionSemanas: rutina.duracionSemanas || 0,
+                        patronSemanas: rutina.patronSemanas || 1,
+                        nivelDificultad: rutina.nivelDificultad || '',
+                        fechaInicio: rutinaData.fechaInicio,
+                        estado: rutinaData.estado || 'ACTIVO'
                     });
+                    console.log('✅ Rutina activa cargada:', this.rutinaActiva());
                 }
             },
             error: (error) => {

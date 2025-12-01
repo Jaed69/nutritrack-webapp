@@ -9,6 +9,7 @@ import { IngredienteService } from '../../../../core/services/ingrediente.servic
 import { NotificationService } from '../../../../core/services/notification.service';
 import {
   Comida,
+  ComidaRequest,
   TipoComida,
   TIPO_COMIDA_LABELS,
   TIPO_COMIDA_ICONS,
@@ -2401,7 +2402,7 @@ export class ComidasListComponent implements OnInit {
   // Formulario comida
   formulario = {
     nombre: '',
-    tipoComida: '' as TipoComida | '' | '__CUSTOM__',
+    tipoComida: '' as string,  // Ahora es string dinámico (ej: 'DESAYUNO', 'ALMUERZO', etc.)
     descripcion: '',
     tiempoPreparacionMinutos: 0,
     porciones: 0,
@@ -2698,9 +2699,9 @@ export class ComidasListComponent implements OnInit {
     }
 
     this.guardando = true;
-    const request = {
+    const request: ComidaRequest = {
       nombre: this.formulario.nombre.trim(),
-      tipoComida: tipoFinal as TipoComida,
+      tipoComidaNombre: tipoFinal,  // Backend espera tipoComidaNombre
       descripcion: this.formulario.descripcion?.trim() || undefined,
       tiempoPreparacionMinutos: this.formulario.tiempoPreparacionMinutos || undefined,
       porciones: this.formulario.porciones || undefined,
@@ -2964,8 +2965,8 @@ export class ComidasListComponent implements OnInit {
   /**
    * Obtiene el label del tipo
    */
-  getTipoLabel(tipo: TipoComida): string {
-    const label = TIPO_COMIDA_LABELS[tipo];
+  getTipoLabel(tipo: string): string {
+    const label = TIPO_COMIDA_LABELS[tipo as TipoComida];
     if (label) return label;
     
     // Para tipos personalizados, formatear de MAYUSCULAS_CON_GUIONES a "Mayúsculas Con Guiones"
@@ -2977,8 +2978,8 @@ export class ComidasListComponent implements OnInit {
   /**
    * Obtiene el icono del tipo
    */
-  getTipoIcon(tipo: TipoComida): string {
-    return TIPO_COMIDA_ICONS[tipo] || '🍽️';
+  getTipoIcon(tipo: string): string {
+    return TIPO_COMIDA_ICONS[tipo as TipoComida] || '🍽️';
   }
 
   /**

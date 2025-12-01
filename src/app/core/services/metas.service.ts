@@ -17,12 +17,25 @@ export class MetasService {
   // ============================================================================
 
   /**
-   * US-20: Obtener planes activos del usuario
+   * US-20: Obtener planes activos del usuario (lista)
    * Endpoint: GET /api/v1/usuario/planes/activos
+   * Retorna: Array de planes con estado ACTIVO
    */
   obtenerPlanesActivos(): Observable<ApiResponse<any[]>> {
     return this.http.get<ApiResponse<any[]>>(
       `${this.usuarioUrl}/planes/activos`
+    );
+  }
+
+  /**
+   * Obtener EL plan activo actual (singular)
+   * Endpoint: GET /api/v1/usuario/planes/activo
+   * Retorna: Un solo plan activo o null si no hay
+   * Útil para: Dashboard de metas, seguimiento diario
+   */
+  obtenerPlanActivo(): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(
+      `${this.usuarioUrl}/planes/activo`
     );
   }
 
@@ -46,12 +59,25 @@ export class MetasService {
   }
 
   /**
-   * US-20: Obtener rutinas activas del usuario
+   * US-20: Obtener rutinas activas del usuario (lista)
    * Endpoint: GET /api/v1/usuario/rutinas/activas
+   * Retorna: Array de rutinas con estado ACTIVO
    */
   obtenerRutinasActivas(): Observable<ApiResponse<any[]>> {
     return this.http.get<ApiResponse<any[]>>(
       `${this.usuarioUrl}/rutinas/activas`
+    );
+  }
+
+  /**
+   * Obtener LA rutina activa actual (singular)
+   * Endpoint: GET /api/v1/usuario/rutinas/activa
+   * Retorna: Una sola rutina activa o null si no hay
+   * Útil para: Dashboard de metas, seguimiento diario
+   */
+  obtenerRutinaActiva(): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(
+      `${this.usuarioUrl}/rutinas/activa`
     );
   }
 
@@ -268,10 +294,11 @@ export class MetasService {
         // Obtener la primera rutina activa
         const rutinaActiva = response.data[0];
         const rutinaId = rutinaActiva.rutina?.id || rutinaActiva.rutinaId;
+        const patronSemanas = rutinaActiva.rutina?.patronSemanas || rutinaActiva.patronSemanas || 1;
         const fechaInicio = new Date(rutinaActiva.fechaInicio);
         const hoy = new Date();
         
-        // Calcular semana y día actuales
+        // Calcular días transcurridos
         const diffTime = hoy.getTime() - fechaInicio.getTime();
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         
@@ -282,9 +309,28 @@ export class MetasService {
           });
         }
 
-        // Calcular semana (1-based) y día de la semana (1-7, donde 1=Lunes)
-        const semanaActual = Math.floor(diffDays / 7) + 1;
-        const diaActual = (diffDays % 7) + 1; // 1=primer día, 2=segundo, etc.
+        // Calcular semana base (1-based, con patrón cíclico)
+        const semanaAbsoluta = Math.floor(diffDays / 7) + 1;
+        const semanaBase = ((semanaAbsoluta - 1) % patronSemanas) + 1;
+
+        // Obtener día de la semana actual (0=Domingo, 1=Lunes, ..., 6=Sábado)
+        const diaSemanaJS = hoy.getDay();
+        
+        // Mapear a número del API: 1=Lunes, 2=Martes, ..., 7=Domingo
+        // JavaScript: 0=Domingo, 1=Lunes, ..., 6=Sábado
+        // API: 1=Lunes, 2=Martes, ..., 6=Sábado, 7=Domingo
+        const diaSemanaAPI = diaSemanaJS === 0 ? 7 : diaSemanaJS;
+
+        console.log('📅 Calculando ejercicios de hoy:', {
+          fechaInicio: fechaInicio.toISOString().split('T')[0],
+          hoy: hoy.toISOString().split('T')[0],
+          diffDays,
+          semanaAbsoluta,
+          patronSemanas,
+          semanaBase,
+          diaSemanaJS,
+          diaSemanaAPI
+        });
 
         // Obtener todos los ejercicios de la rutina
         return this.http.get<ApiResponse<any[]>>(
@@ -295,18 +341,32 @@ export class MetasService {
               return { success: true, data: [], message: 'No hay ejercicios' };
             }
 
+            console.log('🏋️ Ejercicios de la rutina:', ejerciciosResponse.data);
+
             // Filtrar ejercicios para el día actual
-            // Campos del backend: semanaBase, diaSemana, orden
+            // API usa: semanaBase (int), diaSemana (int 1-7), orden (int)
             const ejerciciosHoy = ejerciciosResponse.data
-              .filter(ej => 
-                ej.semanaBase === semanaActual && ej.diaSemana === diaActual
-              )
-              .sort((a, b) => a.orden - b.orden); // Ordenar por campo 'orden'
+              .filter(ej => {
+                const matchSemana = ej.semanaBase === semanaBase;
+                const matchDia = ej.diaSemana === diaSemanaAPI;
+                console.log(`  - ${ej.ejercicio?.nombre}: semana ${ej.semanaBase}=${semanaBase}? ${matchSemana}, dia ${ej.diaSemana}=${diaSemanaAPI}? ${matchDia}`);
+                return matchSemana && matchDia;
+              })
+              .sort((a, b) => (a.orden || 0) - (b.orden || 0)) // Ordenar por campo 'orden'
+              .map(ej => ({
+                ...ej,
+                ejercicioNombre: ej.ejercicio?.nombre || 'Ejercicio',
+                ejercicioDescripcion: ej.ejercicio?.descripcion || '',
+                grupoMuscular: ej.ejercicio?.grupoMuscular || '',
+                tipoEjercicio: ej.ejercicio?.tipoEjercicio || ''
+              }));
+
+            console.log('✅ Ejercicios para hoy:', ejerciciosHoy.length);
 
             return {
               success: true,
               data: ejerciciosHoy,
-              message: `${ejerciciosHoy.length} ejercicios para hoy`
+              message: `${ejerciciosHoy.length} ejercicio(s) para hoy`
             };
           })
         );
