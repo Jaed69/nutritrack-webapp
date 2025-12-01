@@ -54,6 +54,17 @@ import { NotificationService } from "../../../core/services/notification.service
                     <div class="progress-bar">
                       <div class="progress-fill" [style.width.%]="plan.porcentajeCompletado"></div>
                     </div>
+                    @if (plan.comidasTotalHoy > 0) {
+                      <div class="activity-stats">
+                        <span class="stat-item" [class.completed]="plan.diaCompletadoHoy">
+                          @if (plan.diaCompletadoHoy) {
+                            ✅ Día completado
+                          } @else {
+                            🍽️ {{ plan.comidasCompletadasHoy }}/{{ plan.comidasTotalHoy }} comidas hoy
+                          }
+                        </span>
+                      </div>
+                    }
                   </div>
 
                   <div class="card-info">
@@ -152,6 +163,17 @@ import { NotificationService } from "../../../core/services/notification.service
                     <div class="progress-bar">
                       <div class="progress-fill" [style.width.%]="rutina.porcentajeCompletado"></div>
                     </div>
+                    @if (rutina.ejerciciosTotalHoy > 0) {
+                      <div class="activity-stats">
+                        <span class="stat-item" [class.completed]="rutina.diaCompletadoHoy">
+                          @if (rutina.diaCompletadoHoy) {
+                            ✅ Día completado
+                          } @else {
+                            💪 {{ rutina.ejerciciosCompletadosHoy }}/{{ rutina.ejerciciosTotalHoy }} ejercicios hoy
+                          }
+                        </span>
+                      </div>
+                    }
                   </div>
 
                   <div class="card-info">
@@ -373,6 +395,28 @@ import { NotificationService } from "../../../core/services/notification.service
       transition: width 0.3s ease;
     }
 
+    .activity-stats {
+      margin-top: 0.5rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .stat-item {
+      font-size: 0.75rem;
+      color: #718096;
+      background: #f0fff4;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      border: 1px solid #c6f6d5;
+    }
+
+    .stat-item.completed {
+      background: #48bb78;
+      color: white;
+      border-color: #38a169;
+      font-weight: 600;
+    }
+
     .card-info {
       display: flex;
       flex-direction: column;
@@ -546,31 +590,58 @@ export class MisAsignacionesComponent implements OnInit {
 
     Promise.all([
       this.metasService.obtenerPlanesActivos().toPromise(),
-      this.metasService.obtenerRutinasActivas().toPromise()
+      this.metasService.obtenerRutinasActivas().toPromise(),
+      this.metasService.obtenerPlanHoyConEstado().toPromise(),
+      this.metasService.obtenerRutinaHoyConEstado().toPromise()
     ])
-      .then(([respPlanes, respRutinas]: any) => {
+      .then(([respPlanes, respRutinas, respPlanHoy, respRutinaHoy]: any) => {
         this.loading.set(false);
+        
+        // Extraer datos de hoy (comidas/ejercicios completados hoy)
+        const planHoy = respPlanHoy?.data || respPlanHoy || {};
+        const rutinaHoy = respRutinaHoy?.data || respRutinaHoy || {};
+        
+        console.log('📊 Plan Hoy:', planHoy);
+        console.log('📊 Rutina Hoy:', rutinaHoy);
+        
+        // Calcular comidas completadas hoy
+        const comidasHoy = planHoy.comidas || [];
+        const comidasCompletadasHoy = comidasHoy.filter((c: any) => c.registrada).length;
+        const comidasTotalHoy = comidasHoy.length;
+        
+        // Calcular ejercicios completados hoy
+        const ejerciciosHoy = rutinaHoy.ejercicios || [];
+        const ejerciciosCompletadosHoy = ejerciciosHoy.filter((e: any) => e.registrado).length;
+        const ejerciciosTotalHoy = ejerciciosHoy.length;
         
         // Procesar planes
         if (respPlanes?.success) {
           const planesData = respPlanes.data || [];
           console.log('=== PLANES ACTIVOS DEL API ===');
-          console.log('Raw data:', JSON.stringify(planesData, null, 2));
           
           const planesProcessed = planesData.map((plan: any) => {
-            // El API devuelve planDuracionDias directamente
-            // Si no viene, calcular desde fechas como fallback
             const diasTotales = plan.planDuracionDias || this.calcularDiasTotales(plan.fechaInicio, plan.fechaFin);
+            const diaActual = plan.diaActual || 1;
             
-            // IMPORTANTE: El API devuelve:
-            // - id: ID de la asignación (UsuarioPlan) - USAR ESTE para acciones
-            // - planId: ID del plan original del catálogo
-            console.log(`Plan "${plan.planNombre}": id=${plan.id}, planId=${plan.planId}, duracion=${diasTotales}`);
+            // El progreso se basa en:
+            // - Días anteriores: se asumen completados (diaActual - 1)
+            // - Día actual: proporción de comidas completadas hoy
+            const diasCompletados = diaActual - 1; // Días anteriores al actual
+            const progresoHoy = comidasTotalHoy > 0 ? (comidasCompletadasHoy / comidasTotalHoy) : 0;
+            
+            // Progreso total = (días completados + fracción de hoy) / días totales
+            const progresoTotal = ((diasCompletados + progresoHoy) / diasTotales) * 100;
+            const porcentajeReal = Math.min(100, Math.round(progresoTotal));
+            
+            console.log(`Plan "${plan.planNombre}": día ${diaActual}/${diasTotales}, comidas hoy ${comidasCompletadasHoy}/${comidasTotalHoy}, progreso=${porcentajeReal}%`);
             
             return {
               ...plan,
               diasTotales,
-              porcentajeCompletado: this.calcularPorcentaje(plan.diaActual || 1, diasTotales)
+              porcentajeCompletado: porcentajeReal,
+              comidasCompletadasHoy,
+              comidasTotalHoy,
+              diaCompletadoHoy: comidasTotalHoy > 0 && comidasCompletadasHoy === comidasTotalHoy
             };
           });
           this.planesActivos.set(planesProcessed);
@@ -585,26 +656,30 @@ export class MisAsignacionesComponent implements OnInit {
           console.log('Rutinas activas del API:', rutinasData);
           
           const rutinasProcessed = rutinasData.map((rutina: any) => {
-            // El API devuelve rutinaDuracionSemanas directamente
             const semanasTotal = rutina.rutinaDuracionSemanas || 4;
             const diasTotales = semanasTotal * 7;
             
-            // Calcular día actual total basado en semanaActual
-            // semanaActual viene del API (1-based)
             const diaActualTotal = rutina.semanaActual 
-              ? ((rutina.semanaActual - 1) * 7) + 1  // Primer día de la semana actual
+              ? ((rutina.semanaActual - 1) * 7) + 1
               : 1;
             
-            // IMPORTANTE: El API devuelve:
-            // - id: ID de la asignación (UsuarioRutina) - USAR ESTE para acciones
-            // - rutinaId: ID de la rutina original del catálogo
-            console.log(`Rutina "${rutina.rutinaNombre}": id=${rutina.id}, rutinaId=${rutina.rutinaId}, semana=${rutina.semanaActual}`);
+            // El progreso se basa en días + ejercicios de hoy
+            const diasCompletados = diaActualTotal - 1;
+            const progresoHoy = ejerciciosTotalHoy > 0 ? (ejerciciosCompletadosHoy / ejerciciosTotalHoy) : 0;
+            
+            const progresoTotal = ((diasCompletados + progresoHoy) / diasTotales) * 100;
+            const porcentajeReal = Math.min(100, Math.round(progresoTotal));
+            
+            console.log(`Rutina "${rutina.rutinaNombre}": día ${diaActualTotal}/${diasTotales}, ejercicios hoy ${ejerciciosCompletadosHoy}/${ejerciciosTotalHoy}, progreso=${porcentajeReal}%`);
             
             return {
               ...rutina,
               diasTotales,
               diaActualTotal,
-              porcentajeCompletado: this.calcularPorcentaje(diaActualTotal, diasTotales)
+              porcentajeCompletado: porcentajeReal,
+              ejerciciosCompletadosHoy,
+              ejerciciosTotalHoy,
+              diaCompletadoHoy: ejerciciosTotalHoy > 0 && ejerciciosCompletadosHoy === ejerciciosTotalHoy
             };
           });
           this.rutinasActivas.set(rutinasProcessed);
@@ -619,7 +694,7 @@ export class MisAsignacionesComponent implements OnInit {
         this.notificationService.showError('Error al cargar tus asignaciones. Verifica tu conexión.');
       });
   }
-
+            
   /**
    * Calcula días totales entre dos fechas
    */
