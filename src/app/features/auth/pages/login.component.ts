@@ -568,9 +568,7 @@ export class LoginComponent {
               const necesitaOnboarding =
                 !p ||
                 !p.objetivoActual ||
-                !p.nivelActividadActual ||
-                p.etiquetas === undefined ||
-                (p.etiquetas?.length ?? 0) === 0;
+                !p.nivelActividadActual
 
               if (necesitaOnboarding) {
                 this.router.navigate(['/onboarding']);
